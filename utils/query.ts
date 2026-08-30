@@ -26,7 +26,7 @@ const getTransactionHistoryQuery = (accountId: string) => {
     };
 }
 
-const createAccountQuery = (name: string, email: string, currency: string) => {
+const createAccountQuery = (name: string, email: string, currency: string | undefined) => {
     if (!currency) {
         currency = 'INR'; // default currency
     }
