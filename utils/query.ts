@@ -5,10 +5,10 @@ const getAccountInfoQuery = (accountId: string) => {
     };
 }
 
-const createPaymentQuery = (sender_id: string, receiver_id: string, amount: number, currency: string, notes?: string) => {
+const createPaymentQuery = (sender_id: string, receiver_id: string, amount: number, currency: string, notes?: string, idempotency_key?: string) => {
     return {
-        text: 'INSERT INTO payments (sender_id, receiver_id, amount, currency, notes) VALUES ($1, $2, $3, $4, $5) RETURNING payment_id',
-        values: [sender_id, receiver_id, amount, currency, notes],
+        text: 'INSERT INTO payments (sender_id, receiver_id, amount, currency, notes, idempotency_key) VALUES ($1, $2, $3, $4, $5, $6) RETURNING payment_id',
+        values: [sender_id, receiver_id, amount, currency, notes, idempotency_key],
     };
 }
 

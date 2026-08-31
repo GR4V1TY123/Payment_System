@@ -1,6 +1,9 @@
-import fastify from './app';
 import './apis/accounts';
 import './apis/payments';
+import fastify from './app';
+
+import { connectRabbitMQ } from './messaging/rabbitmq';
+await connectRabbitMQ();
 
 const port = Number(process.env.PORT ?? 3000);
 

@@ -2,3 +2,15 @@
 
 Start building
 
+Add idempotency_key , why ? 
+-> if a request is by chance repeated again then, it will be processed only once by checking this key from database, 
+this can happen if a client tries to make a payment again, very useful when the client(frontend) has retry mechanism for request
+a retry is normally trigerred when theres timeout, connection failure, or loses the response 
+even if the server successfully processed the payment. but the client may not know what happened internally in server, so if
+the DB has already recorded this payment request, no need to process it again, this avoids duplicate payment
+
+Set noAck to false, why ?
+-> an ack tells the queue to delete that message from the queue once received
+in the providded fnc if noAck is true, means its auto acknowledging, and marks the message as successful, and is lost once the consumer takes it,
+i have set it to noAck false, for manual ack, so if a worker fails, rabbitmq sneds this message to other worker for preocessing (throuhg round robin algo)
+
