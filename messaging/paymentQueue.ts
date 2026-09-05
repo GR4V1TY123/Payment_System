@@ -1,5 +1,4 @@
 // Queue operations for payment processing
-import fastify from "../app";
 import { getRabbitChannel } from "./rabbitmq";
 
 export const processPayment = async (paymentData: any) => {
@@ -10,7 +9,7 @@ export const processPayment = async (paymentData: any) => {
         Buffer.from(JSON.stringify(paymentData))
     );
 
-    fastify.log.info({
+    console.log({
         message: `Payment data sent to RabbitMQ queue for processing`,
         paymentData
     });

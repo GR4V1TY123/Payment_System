@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { createAccountQuery, getAccountInfoQuery, getTransactionHistoryQuery } from "../utils/query";
+import { createAccountQuery, createPaymentQuery, getAccountInfoQuery, getTransactionHistoryQuery, runQuery } from "../utils/query";
 import fastify from "../app";
+import { processPayment } from "../messaging/paymentQueue";
 
 const createAccount = async (
     request: FastifyRequest<{
@@ -22,20 +23,7 @@ const createAccount = async (
     try {
         const query = createAccountQuery(name, email, currency);
 
-        const result = await fastify.pg.query(query);
-
-        if (result.rowCount === 0) {
-            request.log.error({
-                message: `Failed to create account for ${name} with email ${email}`,
-                error: 'No rows affected'
-            });
-            reply.status(400).send({
-                success: false,
-                message: 'Error creating account',
-                error: 'No rows affected'
-            });
-            return;
-        }
+        const result = await runQuery(query);
 
         request.log.info({
             message: `Successfully created account for ${name} with email ${email}`,
@@ -77,21 +65,8 @@ const getAccountInfo = async (
     });
 
     try {
-        const query = getAccountInfoQuery(account_id);
-        const result = await fastify.pg.query(query);
-
-        if (result.rowCount === 0) {
-            request.log.error({
-                message: `Account not found for account_id: ${account_id}`,
-                error: 'No rows returned'
-            });
-            reply.status(400).send({
-                success: false,
-                message: 'Account not found',
-                error: 'No rows returned'
-            });
-            return;
-        }
+        const query = getAccountInfoQuery(BigInt(account_id));
+        const result = await runQuery(query);
 
         request.log.info({
             message: `Successfully retrieved account info for account_id: ${account_id}`,
@@ -133,21 +108,8 @@ const getTransactionHistory = async (
 
     try {
         const query = getTransactionHistoryQuery(account_id);
-        const result = await fastify.pg.query(query);
+        const result = await runQuery(query);
 
-        if (result.rowCount === 0) {
-            request.log.error({
-                message: `Transaction history not found for account_id: ${account_id}`,
-                error: 'No rows returned'
-            });
-            reply.status(400).send({
-                success: false,
-                message: 'Transaction history not found',
-                error: 'No rows returned'
-            });
-            return;
-        }
-        
         request.log.info({
             message: `Successfully retrieved transaction history for account_id: ${account_id}`,
             rows: result.rows
@@ -171,8 +133,64 @@ const getTransactionHistory = async (
     }
 }
 
+const depositPayment = async (
+    request: FastifyRequest<{
+        Params: {
+            account_id: string;
+        };
+        Body: {
+            amount: number;
+            currency: string;
+            notes?: string;
+        };
+    }>,
+    reply: FastifyReply
+) => {
+    const { account_id } = request.params as { account_id: string };
+    const { amount, currency, notes } = request.body;
+    const { idempotency_key } = request.headers as { idempotency_key: string };
+    const payment_type = 'DEPOSIT'; // Set payment type as 'deposit'
+
+    request.log.info({
+        message: `Received request to deposit payment to account_id: ${account_id} of amount ${amount} ${currency}`,
+        body: request.body
+    });
+
+    try {
+        const query = createPaymentQuery(null, BigInt(account_id), amount, currency, payment_type, notes, idempotency_key);
+        const result = await runQuery(query);
+
+        // Send payment data to RabbitMQ for further processing
+        request.log.info({
+            message: `Successfully created payment record to deposit amount ${amount} ${currency}.`,
+            rows: result.rows
+        });
+
+        await processPayment(result.rows[0]);
+
+        reply.status(202).send({
+            success: true,
+            rowCount: result.rowCount,
+            rows: result.rows,
+            message: 'Payment accepted for processing'
+        });
+
+    } catch (error) {
+        request.log.error({
+            message: `Error depositing payment to account_id: ${account_id} of amount ${amount} ${currency}`,
+            error: (error as Error).message
+        });
+        reply.status(500).send({
+            success: false,
+            message: 'Error depositing payment',
+            error: (error as Error).message
+        });
+    }
+}
+
 export {
     createAccount,
     getAccountInfo,
-    getTransactionHistory
+    getTransactionHistory,
+    depositPayment
 };

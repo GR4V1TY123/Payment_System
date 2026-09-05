@@ -1,23 +1,24 @@
 import fastify from "../app";
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { createPaymentQuery, getPaymentDetailsQuery } from "../utils/query";
+import { createPaymentQuery, getPaymentDetailsQuery, runQuery } from "../utils/query";
 import { processPayment } from "../messaging/paymentQueue";
 
 const createPayment = async (
     request: FastifyRequest<{
-    Body: {
-        sender_id: string;
-        receiver_id: string;
-        amount: number;
-        currency: string;
-        notes?: string;
-    };
-}>,
+        Body: {
+            sender_id: string;
+            receiver_id: string;
+            amount: number;
+            currency: string;
+            notes?: string;
+        };
+    }>,
     reply: FastifyReply
 ) => {
 
     const { sender_id, receiver_id, amount, currency, notes } = request.body;
     const { idempotency_key } = request.headers as { idempotency_key: string };
+    const payment_type = "TRANSFER"; // Set payment type as 'transfer'
 
     request.log.info({
         message: `Received request to create payment from ${sender_id} to ${receiver_id} of amount ${amount} ${currency}`,
@@ -26,40 +27,21 @@ const createPayment = async (
     });
 
     try {
-        const query = createPaymentQuery(sender_id, receiver_id, amount, currency, notes, idempotency_key);
-
-        const result = await fastify.pg.query(query);
-
-        if (result.rowCount === 0) {
-            request.log.error({
-                message: `Failed to create payment from ${sender_id} to ${receiver_id} of amount ${amount} ${currency}`,
-                error: 'No rows affected'
-            });
-            reply.status(400).send({
-                success: false,
-                message: 'Error creating payment',
-                error: 'No rows affected'
-            });
-            return;
-        }
+        const query = createPaymentQuery(BigInt(sender_id), BigInt(receiver_id), amount, currency, payment_type, notes, idempotency_key);
+        const result = await runQuery(query);
 
         // Send payment data to RabbitMQ for further processing
         request.log.info({
-            message: `Successfully created payment from ${sender_id} to ${receiver_id} of amount ${amount} ${currency}. Sending to RabbitMQ for processing.`,
+            message: `Successfully created payment record from ${sender_id} to ${receiver_id} of amount ${amount} ${currency}.`,
             rows: result.rows
         });
         await processPayment(result.rows[0]);
 
-        request.log.info({
-            message: `Payment from ${sender_id} to ${receiver_id} of amount ${amount} ${currency} sent to RabbitMQ for processing.`,
-            paymentData: result.rows[0]
-        });
-
-        reply.status(200).send({
+        reply.status(202).send({
             success: true,
             rowCount: result.rowCount,
             rows: result.rows,
-            message: 'Payment created successfully'
+            message: 'Payment accepted for processing'
         });
 
     } catch (error) {
@@ -77,8 +59,8 @@ const createPayment = async (
 
 const getPaymentDetails = async (
     request: FastifyRequest<{
-    Params: { payment_id: string }
-}>,
+        Params: { payment_id: string }
+    }>,
     reply: FastifyReply
 ) => {
 
@@ -89,22 +71,9 @@ const getPaymentDetails = async (
 
     try {
         const { payment_id } = request.params as { payment_id: string };
-        const query = getPaymentDetailsQuery(payment_id);
+        const query = getPaymentDetailsQuery(BigInt(payment_id));
 
-        const result = await fastify.pg.query(query);
-
-        if (result.rowCount === 0) {
-            request.log.error({
-                message: `Payment not found for payment_id: ${payment_id}`,
-                error: 'No rows returned'
-            });
-            reply.status(400).send({
-                success: false,
-                message: 'Payment not found',
-                error: 'No rows returned'
-            });
-            return;
-        }
+        const result = await runQuery(query);
 
         request.log.info({
             message: `Successfully retrieved payment details for payment_id: ${payment_id}`,

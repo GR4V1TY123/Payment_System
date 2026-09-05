@@ -1,7 +1,7 @@
 export const paymentSchema = {
     body: {
         type: "object",
-        required: ["sender_id", "receiver_id", "amount", "currency"],
+        required: ["amount", "currency"],
         properties: {
             sender_id: { type: "string" },
             receiver_id: { type: "string" },
