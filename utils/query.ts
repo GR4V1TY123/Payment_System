@@ -1,9 +1,12 @@
 import { pool } from "../messaging/db";
 
+type querySchema = {
+    text: string,
+    values?: any[] 
+}
+
 // query bolierplate
-const runQuery = async (query:
-    { text: string; values?: any[] }
-) => {
+const runQuery = async (query: querySchema) => {
 
     try {
         return await pool.query(query);
@@ -16,10 +19,24 @@ const runQuery = async (query:
     }
 };
 
+const lockQuery = (query: querySchema) => {
+    return {
+        ...query,
+        text: query.text + ' FOR UPDATE'
+    }
+}
+
 const getAccountInfoQuery = (accountId: bigint) => {
     return {
         text: 'SELECT * FROM accounts WHERE account_id = $1',
         values: [accountId],
+    };
+}
+
+const getAccountInfowithLockQuery = (accountId1: bigint, accountId2: bigint) => {
+    return {
+        text: 'SELECT * FROM accounts WHERE account_id IN ($1, $2) ORDER BY account_id FOR UPDATE',
+        values: [accountId1, accountId2],
     };
 }
 
@@ -116,5 +133,7 @@ export {
     checkAccountBalanceQuery,
     creditAccountBalanceQuery,
     debitAccountBalanceQuery,
-    createLedgerEntryQuery
+    createLedgerEntryQuery,
+    lockQuery,
+    getAccountInfowithLockQuery
 }

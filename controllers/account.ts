@@ -27,7 +27,7 @@ const createAccount = async (
 
         request.log.info({
             message: `Successfully created account for ${name} with email ${email}`,
-            rows: result.rows
+            rowCount: result.rowCount,
         });
 
         reply.status(200).send({
@@ -70,7 +70,7 @@ const getAccountInfo = async (
 
         request.log.info({
             message: `Successfully retrieved account info for account_id: ${account_id}`,
-            rows: result.rows
+            rowCount: result.rowCount,
         });
 
         reply.status(200).send({
@@ -112,7 +112,7 @@ const getTransactionHistory = async (
 
         request.log.info({
             message: `Successfully retrieved transaction history for account_id: ${account_id}`,
-            rows: result.rows
+            rowCount: result.rowCount,
         });
 
         reply.status(200).send({
@@ -171,7 +171,6 @@ const depositPayment = async (
         reply.status(202).send({
             success: true,
             rowCount: result.rowCount,
-            rows: result.rows,
             message: 'Payment accepted for processing'
         });
 

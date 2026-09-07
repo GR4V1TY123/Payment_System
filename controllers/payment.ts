@@ -33,7 +33,7 @@ const createPayment = async (
         // Send payment data to RabbitMQ for further processing
         request.log.info({
             message: `Successfully created payment record from ${sender_id} to ${receiver_id} of amount ${amount} ${currency}.`,
-            rows: result.rows
+            rowCount: result.rowCount,
         });
         await processPayment(result.rows[0]);
 
@@ -77,7 +77,7 @@ const getPaymentDetails = async (
 
         request.log.info({
             message: `Successfully retrieved payment details for payment_id: ${payment_id}`,
-            rows: result.rows
+            rowCount: result.rowCount,
         });
 
         reply.status(200).send({

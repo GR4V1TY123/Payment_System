@@ -1,18 +1,18 @@
 import { pool } from "../messaging/db";
 import {
-    checkAccountBalanceQuery,
-    checkAccountExistQuery,
     createLedgerEntryQuery,
     creditAccountBalanceQuery,
     debitAccountBalanceQuery,
+    getAccountInfoQuery,
+    getAccountInfowithLockQuery,
     getPaymentByIdQuery,
+    lockQuery,
     updatePaymentStatusQuery
 } from "./query";
 
 export const handlePayment = async (paymentId: bigint) => {
     try {
         const query = getPaymentByIdQuery(paymentId);
-        console.log(`Executing query to fetch payment details: ${query.text} with values: ${query.values}`);
         const paymentResult = await pool.query(query);
         const payment = paymentResult.rows[0];
         const payment_type = payment.payment_type;
@@ -40,43 +40,55 @@ export const transferAmount = async (paymentId: bigint) => {
         // Transactional operations for payment processing
         await client.query("BEGIN");
 
-        const query = getPaymentByIdQuery(paymentId);
+        // lock payment
+        const query = lockQuery(getPaymentByIdQuery(paymentId));
         console.log(`Executing query to fetch payment details: ${query.text} with values: ${query.values}`);
 
         const paymentResult = await client.query(query);
         const payment = paymentResult.rows[0];
 
+        if(!payment) {
+            throw new Error('Payment not found');
+        }
+
+        if(payment.status === 'completed') {
+            return {
+                success: true,
+                message: 'Payment already completed for payment ID: ' + paymentId,
+            };
+        }
+
+        if(payment.status !== 'pending') {
+            throw new Error('Payment is not in pending status');
+        }
+
         // Operation 1: Update payment status to 'processing'
         const statusUpdateQuery = updatePaymentStatusQuery(paymentId, 'processing');
         await client.query(statusUpdateQuery);
 
-        // Operation 2: Check if sender and receiver exist
-        const senderQuery = checkAccountExistQuery(payment.sender_id);
-        const receiverQuery = checkAccountExistQuery(payment.receiver_id);
+        // Operation 2: Lock and check if sender and receiver exist
+        const usersQuery = getAccountInfowithLockQuery(payment.sender_id, payment.receiver_id);
 
-        const sender = await client.query(senderQuery);
-        const receiver = await client.query(receiverQuery);
+        const usersResult = await client.query(usersQuery);
+        
+        const sender = usersResult.rows.find((r: any) => {
+            return r.account_id === payment.sender_id;
+        })
 
-        if (sender.rows.length == 0 || receiver.rows.length == 0) {
-            throw new Error('Sender or receiver account does not exist');
+        const receiver = usersResult.rows.find((r: any) => {
+            return r.account_id === payment.receiver_id;
+        })
+
+        if (!sender) {
+            throw new Error('Sender account does not exist');
+        }
+
+        if (!receiver) {
+            throw new Error('Receiver account does not exist');
         }
 
         // Operation 3: Check if sender has enough balance
-        const checkSenderBalanceQuery = checkAccountBalanceQuery(payment.sender_id);
-        const senderBalanceResult = await client.query(checkSenderBalanceQuery);
-
-        const checkReceiverBalanceQuery = checkAccountBalanceQuery(payment.receiver_id);
-        const receiverBalanceResult = await client.query(checkReceiverBalanceQuery);
-
-        const senderBalance = Number(senderBalanceResult.rows[0].balance);
-        const receiverBalance = Number(receiverBalanceResult.rows[0].balance);
-
-        console.log({
-            message: `Sender balance: ${senderBalance}, Receiver balance: ${receiverBalance}`,
-            sender_id: payment.sender_id,
-            receiver_id: payment.receiver_id,
-            amount: payment.amount
-        });
+        const senderBalance = Number(sender.balance);
 
         if (senderBalance < Number(payment.amount)) {
             throw new Error('Insufficient balance in sender account');
@@ -131,20 +143,29 @@ export const depositPayment = async (paymentId: bigint) => {
         // Transactional operations for deposit processing
         await client.query("BEGIN");
 
-        const query = getPaymentByIdQuery(paymentId);
+        const query = lockQuery(getPaymentByIdQuery(paymentId));
         console.log(`Executing query to fetch payment details: ${query.text} with values: ${query.values}`);
 
         const paymentResult = await client.query(query);
         const payment = paymentResult.rows[0];
 
+        if(!payment) {
+            throw new Error('Payment not found');
+        }
+
+        if(payment.status !== 'pending') {
+            throw new Error('Payment is not in pending status');
+        }
+
         // Operation 1: Update payment status to 'processing'
         const statusUpdateQuery = updatePaymentStatusQuery(paymentId, 'processing');
         await client.query(statusUpdateQuery);
 
-        // Operation 2: Check if receiver exists
-        const receiverQuery = checkAccountExistQuery(payment.sender_id);
-        const receiver = await client.query(receiverQuery);
-        if (receiver.rows.length == 0) {
+        // Operation 2: lock and check if receiver exists
+        const receiverQuery = lockQuery(getAccountInfoQuery(payment.receiver_id));
+        const receiver = (await client.query(receiverQuery)).rows[0];
+        
+        if (!receiver) {
             throw new Error('Receiver account does not exist');
         }
 
