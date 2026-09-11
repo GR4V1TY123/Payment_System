@@ -1,21 +1,20 @@
 // Connect rabbitmq to the application
-import amqp, { Channel } from 'amqplib';
+import amqp, { ConfirmChannel } from 'amqplib';
 
 const RABBITMQ_URL = process.env.RABBITMQ_URL ?? 'amqp://localhost:5672';
 
-let rabbitChannel: Channel;
+let rabbitChannel: ConfirmChannel;
 
 export async function connectRabbitMQ() {
     try {
         const connection = await amqp.connect(RABBITMQ_URL);
-        rabbitChannel = await connection.createChannel();
+        rabbitChannel = await connection.createConfirmChannel();
 
         const queue = 'payment_queue';
         await rabbitChannel.assertQueue(queue, { durable: true });
 
         console.log({
             message: `Connected to RabbitMQ and asserted queue: ${queue}`,
-            url: RABBITMQ_URL
         });
         return rabbitChannel;
     } catch (error) {
@@ -27,12 +26,9 @@ export async function connectRabbitMQ() {
     }
 }
 
-export function getRabbitChannel(): Channel {
+export function getRabbitChannel(): ConfirmChannel {
     if (!rabbitChannel) {
         throw new Error('RabbitMQ channel is not initialized. Call connectRabbitMQ() first.');
     }
-    console.log({
-        message: 'RabbitMQ channel retrieved successfully'
-    });
     return rabbitChannel;
 }

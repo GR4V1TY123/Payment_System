@@ -1,7 +1,9 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { createAccountQuery, createPaymentQuery, getAccountInfoQuery, getTransactionHistoryQuery, runQuery } from "../utils/query";
-import fastify from "../app";
-import { processPayment } from "../messaging/paymentQueue";
+import { runQuery } from "../utils/query";
+import { createAccountQuery, getAccountInfoQuery, getTransactionHistoryQuery } from "../query/accountQueries";
+import { createPaymentQuery } from "../query/paymentQueries";
+import { pool } from "../messaging/db";
+import { createOutboxEntryQuery } from "../query/outboxQueries";
 
 const createAccount = async (
     request: FastifyRequest<{
@@ -156,9 +158,24 @@ const depositPayment = async (
         body: request.body
     });
 
+    const client = await pool.connect();
+
     try {
-        const query = createPaymentQuery(null, BigInt(account_id), amount, currency, payment_type, notes, idempotency_key);
-        const result = await runQuery(query);
+        await client.query("BEGIN");
+        const PaymentQuery = createPaymentQuery(null, BigInt(account_id), amount, currency, payment_type, notes, idempotency_key);
+        const result = await client.query(PaymentQuery);
+
+        const payment = result.rows[0];
+        const { payment_id } = payment;
+        const payload = {
+            payment_id: payment_id.toString()
+        }
+
+        // make outbox record in outbox table
+        const OutboxEntryQuery = createOutboxEntryQuery(BigInt(payment_id), 'PAYMENT_CREATED', payload);
+        await client.query(OutboxEntryQuery);
+
+        await client.query("COMMIT");
 
         // Send payment data to RabbitMQ for further processing
         request.log.info({
@@ -166,7 +183,7 @@ const depositPayment = async (
             rows: result.rows
         });
 
-        await processPayment(result.rows[0]);
+        // await processPayment(result.rows[0]);
 
         reply.status(202).send({
             success: true,

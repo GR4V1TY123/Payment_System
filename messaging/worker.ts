@@ -37,7 +37,7 @@ channel.consume(queue, async (msg) => {
             // Process the payment data
             console.log({
                 message: `Processing payment data from RabbitMQ queue`,
-                paymentData
+                paymentId: paymentId
             });
             const result = await handlePayment(paymentId);
 
@@ -48,7 +48,7 @@ channel.consume(queue, async (msg) => {
 
             console.log({
                 message: `Successfully processed payment data from RabbitMQ queue`,
-                paymentData
+                paymentId: paymentId,
             });
 
             channel.ack(msg);
@@ -58,7 +58,7 @@ channel.consume(queue, async (msg) => {
                 message: `Error processing payment from RabbitMQ queue`,
                 error: (error as Error).message
             });
-            channel.nack(msg, false, false); // requeue the message for retry
+            channel.nack(msg, false, true); // requeue the message for retry
         }
     }
 }, { noAck: false });

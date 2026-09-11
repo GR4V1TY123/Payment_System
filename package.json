@@ -6,6 +6,7 @@
   "scripts": {
     "start": "tsx watch index.ts",
     "worker": "tsx watch messaging/worker.ts",
+    "publisher": "tsx watch messaging/publisher.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

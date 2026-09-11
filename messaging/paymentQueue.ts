@@ -1,16 +1,19 @@
 // Queue operations for payment processing
 import { getRabbitChannel } from "./rabbitmq";
 
-export const processPayment = async (paymentData: any) => {
+export const publishToQueue = async (paymentData: any) => {
     const channel = getRabbitChannel();
 
     channel.sendToQueue(
         'payment_queue',
-        Buffer.from(JSON.stringify(paymentData))
+        Buffer.from(JSON.stringify(paymentData)),
+        { persistent: true } // Ensure the message is persisted to disk
     );
+
+    await channel.waitForConfirms(); // Wait for the message to be confirmed by RabbitMQ
 
     console.log({
         message: `Payment data sent to RabbitMQ queue for processing`,
-        paymentData
+        paymentId: paymentData.payment_id
     });
 };

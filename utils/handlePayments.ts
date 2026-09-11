@@ -1,14 +1,7 @@
 import { pool } from "../messaging/db";
-import {
-    createLedgerEntryQuery,
-    creditAccountBalanceQuery,
-    debitAccountBalanceQuery,
-    getAccountInfoQuery,
-    getAccountInfowithLockQuery,
-    getPaymentByIdQuery,
-    lockQuery,
-    updatePaymentStatusQuery
-} from "./query";
+import { creditAccountBalanceQuery, debitAccountBalanceQuery, getAccountInfoQuery, getAccountInfowithLockQuery } from "../query/accountQueries";
+import { createLedgerEntryQuery, getPaymentByIdQuery, updatePaymentStatusQuery } from "../query/paymentQueries";
+import { lockQuery } from "./query";
 
 export const handlePayment = async (paymentId: bigint) => {
     try {
@@ -47,18 +40,18 @@ export const transferAmount = async (paymentId: bigint) => {
         const paymentResult = await client.query(query);
         const payment = paymentResult.rows[0];
 
-        if(!payment) {
+        if (!payment) {
             throw new Error('Payment not found');
         }
 
-        if(payment.status === 'completed') {
+        if (payment.status === 'completed') {
             return {
                 success: true,
                 message: 'Payment already completed for payment ID: ' + paymentId,
             };
         }
 
-        if(payment.status !== 'pending') {
+        if (payment.status !== 'pending') {
             throw new Error('Payment is not in pending status');
         }
 
@@ -70,7 +63,7 @@ export const transferAmount = async (paymentId: bigint) => {
         const usersQuery = getAccountInfowithLockQuery(payment.sender_id, payment.receiver_id);
 
         const usersResult = await client.query(usersQuery);
-        
+
         const sender = usersResult.rows.find((r: any) => {
             return r.account_id === payment.sender_id;
         })
@@ -149,11 +142,11 @@ export const depositPayment = async (paymentId: bigint) => {
         const paymentResult = await client.query(query);
         const payment = paymentResult.rows[0];
 
-        if(!payment) {
+        if (!payment) {
             throw new Error('Payment not found');
         }
 
-        if(payment.status !== 'pending') {
+        if (payment.status !== 'pending') {
             throw new Error('Payment is not in pending status');
         }
 
@@ -164,7 +157,7 @@ export const depositPayment = async (paymentId: bigint) => {
         // Operation 2: lock and check if receiver exists
         const receiverQuery = lockQuery(getAccountInfoQuery(payment.receiver_id));
         const receiver = (await client.query(receiverQuery)).rows[0];
-        
+
         if (!receiver) {
             throw new Error('Receiver account does not exist');
         }

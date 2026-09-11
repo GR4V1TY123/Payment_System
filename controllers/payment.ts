@@ -1,7 +1,8 @@
-import fastify from "../app";
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { createPaymentQuery, getPaymentDetailsQuery, runQuery } from "../utils/query";
-import { processPayment } from "../messaging/paymentQueue";
+import { runQuery } from "../utils/query";
+import { createPaymentQuery, getPaymentDetailsQuery } from "../query/paymentQueries";
+import { pool } from "../messaging/db";
+import { createOutboxEntryQuery } from "../query/outboxQueries";
 
 const createPayment = async (
     request: FastifyRequest<{
@@ -23,28 +24,44 @@ const createPayment = async (
     request.log.info({
         message: `Received request to create payment from ${sender_id} to ${receiver_id} of amount ${amount} ${currency}`,
         body: request.body,
-        headers: request.headers
     });
 
+    const client = await pool.connect();
+
     try {
-        const query = createPaymentQuery(BigInt(sender_id), BigInt(receiver_id), amount, currency, payment_type, notes, idempotency_key);
-        const result = await runQuery(query);
+        await client.query("BEGIN");
+
+        // make payment record in payments table
+        const PaymentQuery = createPaymentQuery(BigInt(sender_id), BigInt(receiver_id), amount, currency, payment_type, notes, idempotency_key);
+        const result = await client.query(PaymentQuery);
+
+        const payment = result.rows[0];
+        const { payment_id } = payment;
+        const payload = {
+            payment_id: payment_id.toString()
+        }
+
+        // make outbox record in outbox table
+        const OutboxEntryQuery = createOutboxEntryQuery(BigInt(payment_id), 'PAYMENT_CREATED', payload);
+        await client.query(OutboxEntryQuery);
+
+        await client.query("COMMIT");
 
         // Send payment data to RabbitMQ for further processing
         request.log.info({
             message: `Successfully created payment record from ${sender_id} to ${receiver_id} of amount ${amount} ${currency}.`,
             rowCount: result.rowCount,
         });
-        await processPayment(result.rows[0]);
 
         reply.status(202).send({
             success: true,
             rowCount: result.rowCount,
-            rows: result.rows,
+            payment_id: payment_id,
             message: 'Payment accepted for processing'
         });
 
     } catch (error) {
+        await client.query("ROLLBACK");
         request.log.error({
             message: `Error creating payment from ${sender_id} to ${receiver_id} of amount ${amount} ${currency}`,
             error: (error as Error).message
@@ -54,6 +71,9 @@ const createPayment = async (
             message: 'Error creating payment',
             error: (error as Error).message
         });
+    } finally {
+        // Release the client back to the pool
+        client.release();
     }
 };
 

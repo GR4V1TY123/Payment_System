@@ -1,7 +1,6 @@
 import fastify from "../app";
 import { createPayment, getPaymentDetails } from "../controllers/payment";
 import { paymentSchema } from "../schemas/bodySchemas";
-import { getPaymentDetailsQuery } from "../utils/query";
 
 // create payment
 fastify.post(
