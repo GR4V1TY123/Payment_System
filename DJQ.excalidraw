@@ -38,7 +38,10 @@
       "containerId": null,
       "originalText": "1. User can create payment\n2. User can view payment status\n\n// later\n3. User can assign priority to a payment\n4. User can view payment dashboard (monitoring)\n5. User can assign schedule time to a payment",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "p9jZnQDpQWOsdUC4kbNM9",
@@ -75,7 +78,10 @@
       "containerId": null,
       "originalText": "FUNCTIONAL REQS:",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "k2cQdCZ5Exc-DBiw-PZai",
@@ -112,7 +118,10 @@
       "containerId": null,
       "originalText": "NON-FUNCTIONAL REQS:",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "ABgFngnugvXxiVumcsZYE",
@@ -149,7 +158,10 @@
       "containerId": null,
       "originalText": "1. System processes payment async\n2. System can retry a payment by exponential backoff\n3. failing payment are assigned to deadletter queue\n4. System handles concurrency through locks\n5. System maintains log of every operation\n\n6. Latency < 200ms\n7. CAP -> Strong consistency, low availability\n\n// later\n8. add modes for prefering consistency or availability",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "MtSXAGqkBsGZSaucSHPQX",
@@ -193,7 +205,8 @@
       "strokeOptions": {
         "variability": "constant",
         "streamline": 0.5
-      }
+      },
+      "created": null
     },
     {
       "id": "UaeoAE_nF82uAei51cYOF",
@@ -230,7 +243,10 @@
       "containerId": null,
       "originalText": "Pay STATUS FLOW:",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "4dwtfyNzismTm9zuAbTB1",
@@ -267,7 +283,10 @@
       "containerId": null,
       "originalText": "Created, Queued, Processing, Success, Failure, Retrying\n\n// later\nscheduled\ntimeout",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "UEeUraTk3yaceeInrUhmD",
@@ -310,7 +329,8 @@
       ],
       "updated": 1787917863482,
       "link": null,
-      "locked": false
+      "locked": false,
+      "created": null
     },
     {
       "id": "jiHOiR8SUQyg50DP1ocxZ",
@@ -347,7 +367,10 @@
       "containerId": "UEeUraTk3yaceeInrUhmD",
       "originalText": "CREATED\n(in db)",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "X0OzI-QbTWHyoSiJ0u0yy",
@@ -394,7 +417,8 @@
       ],
       "updated": 1787917863482,
       "link": null,
-      "locked": false
+      "locked": false,
+      "created": null
     },
     {
       "id": "wWJOeCmsopMHAL31n92fn",
@@ -431,7 +455,10 @@
       "containerId": "X0OzI-QbTWHyoSiJ0u0yy",
       "originalText": "QUEUED",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "A_YF_FTh3Tm2B2P7XVcdB",
@@ -478,7 +505,8 @@
       ],
       "updated": 1787917863482,
       "link": null,
-      "locked": false
+      "locked": false,
+      "created": null
     },
     {
       "id": "6cIvGn039i8tKcoWHhs22",
@@ -515,7 +543,10 @@
       "containerId": "A_YF_FTh3Tm2B2P7XVcdB",
       "originalText": "PROCESSING\n(in worker)",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "BXKQcs4cwYuJSNjw6cNSO",
@@ -554,7 +585,8 @@
       ],
       "updated": 1787917863482,
       "link": null,
-      "locked": false
+      "locked": false,
+      "created": null
     },
     {
       "id": "A7vcuDRjmLD4EpNqFvHXB",
@@ -591,7 +623,10 @@
       "containerId": "BXKQcs4cwYuJSNjw6cNSO",
       "originalText": "SUCCESS",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "3b22VoYlelVq5Ok8YiEPf",
@@ -638,7 +673,8 @@
       ],
       "updated": 1787917863482,
       "link": null,
-      "locked": false
+      "locked": false,
+      "created": null
     },
     {
       "id": "mCHbIe7Kti5-5zju7ot8w",
@@ -675,7 +711,10 @@
       "containerId": "3b22VoYlelVq5Ok8YiEPf",
       "originalText": "FAILURE\n(check attempts)",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "zr_VgSPawxWzO9eXKVJfm",
@@ -714,7 +753,8 @@
       ],
       "updated": 1787917863482,
       "link": null,
-      "locked": false
+      "locked": false,
+      "created": null
     },
     {
       "id": "O-ALED7qxhOwofvGx2JGC",
@@ -751,7 +791,10 @@
       "containerId": "zr_VgSPawxWzO9eXKVJfm",
       "originalText": "DEAD LETTER QUEUED",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "k_lTOU8v0LrJmYB2dHSxT",
@@ -812,7 +855,8 @@
       "moveMidPointsWithElement": false,
       "fixedSegments": null,
       "startIsSpecial": null,
-      "endIsSpecial": null
+      "endIsSpecial": null,
+      "created": null
     },
     {
       "id": "LgXp1xHClaSpNkdtBSR6P",
@@ -849,7 +893,10 @@
       "containerId": "k_lTOU8v0LrJmYB2dHSxT",
       "originalText": "USER ADDS payment",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "feejp5j59wyjqzIjJpE-u",
@@ -917,7 +964,8 @@
       "moveMidPointsWithElement": false,
       "fixedSegments": null,
       "startIsSpecial": null,
-      "endIsSpecial": null
+      "endIsSpecial": null,
+      "created": null
     },
     {
       "id": "ca8l0lcvlPBxlafzJLbuF",
@@ -954,7 +1002,10 @@
       "containerId": "feejp5j59wyjqzIjJpE-u",
       "originalText": "ADD Pay TO QUEUE\n(waiting state)",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "ZcZf3iEThnfnBD0qWWTJO",
@@ -1022,7 +1073,8 @@
       "moveMidPointsWithElement": false,
       "fixedSegments": null,
       "startIsSpecial": null,
-      "endIsSpecial": null
+      "endIsSpecial": null,
+      "created": null
     },
     {
       "id": "YxBeBGmDL2pP1mqbHtJu7",
@@ -1059,7 +1111,10 @@
       "containerId": "ZcZf3iEThnfnBD0qWWTJO",
       "originalText": "WORKER FETCHES Pay FROM QUEUE",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "vzzTSf7doPqlMjFrPiV-R",
@@ -1127,7 +1182,8 @@
       "moveMidPointsWithElement": false,
       "fixedSegments": null,
       "startIsSpecial": null,
-      "endIsSpecial": null
+      "endIsSpecial": null,
+      "created": null
     },
     {
       "id": "aSmwXvMVjD3ZPmGDw8s2c",
@@ -1164,7 +1220,10 @@
       "containerId": "vzzTSf7doPqlMjFrPiV-R",
       "originalText": "pay SUCCESSFUL",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "_ei4MjCskmRj93d0wfMHP",
@@ -1232,7 +1291,8 @@
       "moveMidPointsWithElement": false,
       "fixedSegments": null,
       "startIsSpecial": null,
-      "endIsSpecial": null
+      "endIsSpecial": null,
+      "created": null
     },
     {
       "id": "advHomDyTq0PO6ZbdSZkZ",
@@ -1269,7 +1329,10 @@
       "containerId": "_ei4MjCskmRj93d0wfMHP",
       "originalText": "pay FAILURE",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "WigR7cYXKuOPPyb4mxNwv",
@@ -1337,7 +1400,8 @@
       "moveMidPointsWithElement": false,
       "fixedSegments": null,
       "startIsSpecial": null,
-      "endIsSpecial": null
+      "endIsSpecial": null,
+      "created": null
     },
     {
       "id": "CwEkGMwEvCgQS53cFWO8a",
@@ -1374,7 +1438,10 @@
       "containerId": "WigR7cYXKuOPPyb4mxNwv",
       "originalText": "RE-QUEUE\n(exponential backoff)",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "nMnf4Ck97mW61QuKRi9BR",
@@ -1442,7 +1509,8 @@
       "moveMidPointsWithElement": false,
       "fixedSegments": null,
       "startIsSpecial": null,
-      "endIsSpecial": null
+      "endIsSpecial": null,
+      "created": null
     },
     {
       "id": "7UcB3D20bzVkARcbNh3eN",
@@ -1479,7 +1547,10 @@
       "containerId": "nMnf4Ck97mW61QuKRi9BR",
       "originalText": "ATTEMPTS EXCEEDED",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "OLsS72vLEhBUNdDp2hQt6",
@@ -1522,7 +1593,8 @@
       ],
       "updated": 1787917710309,
       "link": null,
-      "locked": false
+      "locked": false,
+      "created": null
     },
     {
       "id": "iCfVyE7hWnpgRm4fql0q3",
@@ -1559,7 +1631,10 @@
       "containerId": "OLsS72vLEhBUNdDp2hQt6",
       "originalText": "USER",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "t6rTF6wHAfE0jod_bwhv7",
@@ -1606,7 +1681,8 @@
       ],
       "updated": 1787919486576,
       "link": null,
-      "locked": false
+      "locked": false,
+      "created": null
     },
     {
       "id": "kjStzrtCY31ABN7x_2gtn",
@@ -1643,7 +1719,10 @@
       "containerId": "t6rTF6wHAfE0jod_bwhv7",
       "originalText": "QUEUE",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "BsXGrpngwDu6UtXOtHknr",
@@ -1678,7 +1757,8 @@
       ],
       "updated": 1787917792349,
       "link": null,
-      "locked": false
+      "locked": false,
+      "created": null
     },
     {
       "id": "na3E_7Skxka4P7fktxTlK",
@@ -1715,7 +1795,10 @@
       "containerId": "BsXGrpngwDu6UtXOtHknr",
       "originalText": "WORKER 1",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "-rr6SKYRVHzmBqpsFAezm",
@@ -1754,7 +1837,8 @@
       ],
       "updated": 1787917792349,
       "link": null,
-      "locked": false
+      "locked": false,
+      "created": null
     },
     {
       "id": "2S8ai1ABYU9u9iNPksyco",
@@ -1791,7 +1875,10 @@
       "containerId": "-rr6SKYRVHzmBqpsFAezm",
       "originalText": "WORKER 2",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "3ZyAcoof8pV5gy9SQt-ve",
@@ -1826,7 +1913,8 @@
       ],
       "updated": 1787917792349,
       "link": null,
-      "locked": false
+      "locked": false,
+      "created": null
     },
     {
       "id": "gWg2G27W9jLPjVBy3xzpI",
@@ -1863,7 +1951,10 @@
       "containerId": "3ZyAcoof8pV5gy9SQt-ve",
       "originalText": "WORKER N",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "gdX9lE-0YkKsdLhBw6-aW",
@@ -1887,8 +1978,8 @@
         "type": 3
       },
       "seed": 444135997,
-      "version": 2267,
-      "versionNonce": 1786579102,
+      "version": 2272,
+      "versionNonce": 1017512017,
       "isDeleted": false,
       "boundElements": [
         {
@@ -1910,19 +2001,24 @@
         {
           "id": "kb8IZY7-shwX0tGziywFJ",
           "type": "arrow"
+        },
+        {
+          "id": "nBtniR4EBMMRUUB7rc8bO",
+          "type": "arrow"
         }
       ],
-      "updated": 1787919434359,
+      "updated": 1789221234136,
       "link": null,
-      "locked": false
+      "locked": false,
+      "created": null
     },
     {
       "id": "KQXazKdla9jKH_MRe-8be",
       "type": "text",
       "x": 1694.315797005554,
-      "y": -192.63681820287806,
+      "y": -210.13681820287806,
       "width": 246.39990234375,
-      "height": 175,
+      "height": 210,
       "angle": 0,
       "strokeColor": "#1e1e1e",
       "backgroundColor": "transparent",
@@ -1936,22 +2032,25 @@
       "index": "ar",
       "roundness": null,
       "seed": 758688413,
-      "version": 2182,
-      "versionNonce": 1649664542,
+      "version": 2200,
+      "versionNonce": 681671729,
       "isDeleted": false,
       "boundElements": [],
-      "updated": 1787919467361,
+      "updated": 1789221024483,
       "link": null,
       "locked": false,
-      "text": "DATABASE\n\n- payment\n- account\n- ledger entries",
+      "text": "DATABASE\n\n- payment\n- account\n- ledger entries\n- outbox events",
       "fontSize": 28,
       "fontFamily": 8,
       "textAlign": "center",
       "verticalAlign": "middle",
       "containerId": "gdX9lE-0YkKsdLhBw6-aW",
-      "originalText": "DATABASE\n\n- payment\n- account\n- ledger entries",
+      "originalText": "DATABASE\n\n- payment\n- account\n- ledger entries\n- outbox events",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "kggBofM_B72YiUZrv3Pm9",
@@ -2016,7 +2115,8 @@
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false,
-      "moveMidPointsWithElement": false
+      "moveMidPointsWithElement": false,
+      "created": null
     },
     {
       "id": "d-ReceqdsWb8cPYkGuTUh",
@@ -2053,7 +2153,10 @@
       "containerId": "kggBofM_B72YiUZrv3Pm9",
       "originalText": "ADD Pay",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "IyYYjCo_oa-Jd-wmbgPoF",
@@ -2096,7 +2199,8 @@
       ],
       "updated": 1787919450296,
       "link": null,
-      "locked": false
+      "locked": false,
+      "created": null
     },
     {
       "id": "2FQQwQGHbLE96-0HVJzlM",
@@ -2133,7 +2237,10 @@
       "containerId": "IyYYjCo_oa-Jd-wmbgPoF",
       "originalText": "DASHBOARD",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "8r2dqr_PDRL0dFMfetGJ0",
@@ -2178,7 +2285,8 @@
       "endBinding": null,
       "startArrowhead": null,
       "endArrowhead": null,
-      "polygon": false
+      "polygon": false,
+      "created": null
     },
     {
       "id": "4LDfQI_TZua9c_U_OzO7T",
@@ -2223,7 +2331,8 @@
       "endBinding": null,
       "startArrowhead": null,
       "endArrowhead": null,
-      "polygon": false
+      "polygon": false,
+      "created": null
     },
     {
       "id": "RF-98TibPf0UeN_aJNvan",
@@ -2231,7 +2340,7 @@
       "x": 1817.2596429137918,
       "y": -266.3748834166634,
       "width": 868.5230446948215,
-      "height": 69.21249644589483,
+      "height": 68.46155942000365,
       "angle": 0,
       "strokeColor": "#1e1e1e",
       "backgroundColor": "transparent",
@@ -2245,8 +2354,8 @@
       "index": "b07",
       "roundness": null,
       "seed": 284676354,
-      "version": 2424,
-      "versionNonce": 649746462,
+      "version": 2426,
+      "versionNonce": 2081171807,
       "isDeleted": false,
       "boundElements": [
         {
@@ -2254,7 +2363,7 @@
           "id": "jbg1-WysbEEEAlSLokJQ9"
         }
       ],
-      "updated": 1787919450727,
+      "updated": 1789221234137,
       "link": null,
       "locked": false,
       "points": [
@@ -2272,11 +2381,11 @@
         ],
         [
           -543.54374520023,
-          -69.21249644589483
+          -68.46155942000365
         ],
         [
           -868.5230446948215,
-          -69.21249644589483
+          -68.46155942000365
         ]
       ],
       "startBinding": {
@@ -2313,7 +2422,8 @@
         }
       ],
       "startIsSpecial": false,
-      "endIsSpecial": false
+      "endIsSpecial": false,
+      "created": null
     },
     {
       "id": "jbg1-WysbEEEAlSLokJQ9",
@@ -2350,7 +2460,10 @@
       "containerId": "RF-98TibPf0UeN_aJNvan",
       "originalText": "READ DATA\n FROM DB",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "-pgnMJ2m5dV-82vxD93N2",
@@ -2415,7 +2528,8 @@
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false,
-      "moveMidPointsWithElement": false
+      "moveMidPointsWithElement": false,
+      "created": null
     },
     {
       "id": "_kXL0Lf2QY2Iq5NjAuugT",
@@ -2452,7 +2566,10 @@
       "containerId": "-pgnMJ2m5dV-82vxD93N2",
       "originalText": "DISPLAY DATA\n TO USER",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "AvONFmSl3iGa9z4Oy7po2",
@@ -2499,7 +2616,8 @@
       ],
       "updated": 1787917710309,
       "link": null,
-      "locked": false
+      "locked": false,
+      "created": null
     },
     {
       "id": "uPDV5gxOOndCgc1J9JqP2",
@@ -2536,7 +2654,10 @@
       "containerId": "AvONFmSl3iGa9z4Oy7po2",
       "originalText": "Pay API",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "bLE5psvD_YBYICBpTPlCH",
@@ -2560,8 +2681,8 @@
         "type": 2
       },
       "seed": 1782149277,
-      "version": 802,
-      "versionNonce": 272388830,
+      "version": 805,
+      "versionNonce": 756472287,
       "isDeleted": false,
       "boundElements": [
         {
@@ -2569,7 +2690,7 @@
           "id": "AKkWmHFg4aqaSsy_m0lEj"
         }
       ],
-      "updated": 1787919486576,
+      "updated": 1789221052844,
       "link": null,
       "locked": false,
       "points": [
@@ -2604,14 +2725,15 @@
       "fixedSegments": null,
       "startIsSpecial": null,
       "endIsSpecial": null,
-      "moveMidPointsWithElement": false
+      "moveMidPointsWithElement": false,
+      "created": null
     },
     {
       "id": "AKkWmHFg4aqaSsy_m0lEj",
       "type": "text",
-      "x": 1250.047022501628,
-      "y": 282.92952967316734,
-      "width": 94.63993835449219,
+      "x": 1725.0584098950446,
+      "y": 177.9633061562528,
+      "width": 182.57980346679688,
       "height": 25,
       "angle": 0,
       "strokeColor": "#1e1e1e",
@@ -2626,22 +2748,25 @@
       "index": "b0D",
       "roundness": null,
       "seed": 47490525,
-      "version": 29,
-      "versionNonce": 1165456573,
+      "version": 51,
+      "versionNonce": 1104443345,
       "isDeleted": false,
       "boundElements": [],
-      "updated": 1787752962652,
+      "updated": 1789221050796,
       "link": null,
       "locked": false,
-      "text": "ENQUEUE",
+      "text": "publish from outbox",
       "fontSize": 20,
       "fontFamily": 6,
       "textAlign": "center",
       "verticalAlign": "middle",
       "containerId": "bLE5psvD_YBYICBpTPlCH",
-      "originalText": "ENQUEUE",
+      "originalText": "publish from outbox",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "FhMzPjE_yyTxWLFlYPafv",
@@ -2665,8 +2790,8 @@
         "type": 3
       },
       "seed": 1195810035,
-      "version": 593,
-      "versionNonce": 2058508290,
+      "version": 600,
+      "versionNonce": 1224059199,
       "isDeleted": false,
       "boundElements": [
         {
@@ -2680,11 +2805,16 @@
         {
           "id": "GQw-_L1s477nehhZVKnnJ",
           "type": "arrow"
+        },
+        {
+          "id": "nBtniR4EBMMRUUB7rc8bO",
+          "type": "arrow"
         }
       ],
-      "updated": 1787919637230,
+      "updated": 1789221234136,
       "link": null,
-      "locked": false
+      "locked": false,
+      "created": null
     },
     {
       "id": "1k69Kp3FPJodqsSYN7icy",
@@ -2754,7 +2884,8 @@
       "moveMidPointsWithElement": false,
       "fixedSegments": null,
       "startIsSpecial": null,
-      "endIsSpecial": null
+      "endIsSpecial": null,
+      "created": null
     },
     {
       "id": "MWkeSZ2fvvWEMMmorBLY6",
@@ -2791,7 +2922,10 @@
       "containerId": "1k69Kp3FPJodqsSYN7icy",
       "originalText": "WRITE TO DB",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "p6yoKp9uOabcg_B_ffwvO",
@@ -2856,7 +2990,8 @@
       "startArrowhead": null,
       "endArrowhead": "arrow",
       "elbowed": false,
-      "moveMidPointsWithElement": false
+      "moveMidPointsWithElement": false,
+      "created": null
     },
     {
       "id": "zDRRKOPEUr8VXh3m99zn4",
@@ -2893,7 +3028,10 @@
       "containerId": "p6yoKp9uOabcg_B_ffwvO",
       "originalText": "PROCESS Pay",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "kb8IZY7-shwX0tGziywFJ",
@@ -2962,7 +3100,8 @@
       "elbowed": true,
       "fixedSegments": null,
       "startIsSpecial": null,
-      "endIsSpecial": null
+      "endIsSpecial": null,
+      "created": null
     },
     {
       "id": "tn02Ohv4kGVDcHbYfXakj",
@@ -2999,7 +3138,10 @@
       "containerId": "kb8IZY7-shwX0tGziywFJ",
       "originalText": "RECORD THE Pay",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "tNZt7zrfo-yYWVbCJlKrf",
@@ -3036,7 +3178,10 @@
       "containerId": null,
       "originalText": "ENTITIES:",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "PBDG0ki7pft1Ke2VJD9ho",
@@ -3058,22 +3203,25 @@
       "index": "b0w",
       "roundness": null,
       "seed": 1836673346,
-      "version": 313,
-      "versionNonce": 1803156382,
+      "version": 329,
+      "versionNonce": 975263338,
       "isDeleted": false,
       "boundElements": [],
-      "updated": 1787919202569,
+      "updated": 1788011068172,
       "link": null,
       "locked": false,
-      "text": "1. Payment -> for processing payment\n    \n    - payment_id (pkey)\n    - sender (fkey)\n    - receiver (fkey)\n    - amount\n    - currency\n    - status\n    - retries\n    - gateway_model\n    - transaction_reference\n    - idempotency_key\n    - notes",
+      "text": "1. Payment -> for processing payment\n    \n    - payment_id (pkey)\n    - sender (fkey)\n    - receiver (fkey)\n    - amount\n    - currency\n    - status\n    - retries\n    - payment_method\n    - transaction_reference\n    - idempotency_key\n    - notes",
       "fontSize": 28,
       "fontFamily": 6,
       "textAlign": "left",
       "verticalAlign": "top",
       "containerId": null,
-      "originalText": "1. Payment -> for processing payment\n    \n    - payment_id (pkey)\n    - sender (fkey)\n    - receiver (fkey)\n    - amount\n    - currency\n    - status\n    - retries\n    - gateway_model\n    - transaction_reference\n    - idempotency_key\n    - notes",
+      "originalText": "1. Payment -> for processing payment\n    \n    - payment_id (pkey)\n    - sender (fkey)\n    - receiver (fkey)\n    - amount\n    - currency\n    - status\n    - retries\n    - payment_method\n    - transaction_reference\n    - idempotency_key\n    - notes",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "Bcm7bi6Q0pOzg4ODKArI8",
@@ -3110,7 +3258,10 @@
       "containerId": null,
       "originalText": "2. Account -> account info\n    \n    - account_id (pkey)\n    - name\n    - email (uniq)\n    - currency\n    - status\n\n    //later\n    - account_no (like upi or smthn)",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "9nyT-L7ft5gDYEzZUYiAS",
@@ -3132,11 +3283,11 @@
       "index": "b0z",
       "roundness": null,
       "seed": 2011318146,
-      "version": 414,
-      "versionNonce": 865985154,
+      "version": 431,
+      "versionNonce": 1532760246,
       "isDeleted": false,
       "boundElements": [],
-      "updated": 1787918795013,
+      "updated": 1788011323196,
       "link": null,
       "locked": false,
       "text": "3. LedgerEntry -> single souce of truth for trasaction \n    \n    - ledger_entry_id\n    - payment_id\n    - account_id\n    - amount\n    - type",
@@ -3147,7 +3298,10 @@
       "containerId": null,
       "originalText": "3. LedgerEntry -> single souce of truth for trasaction \n    \n    - ledger_entry_id\n    - payment_id\n    - account_id\n    - amount\n    - type",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "Mbqxd83zCkPlParaQCQcg",
@@ -3184,15 +3338,18 @@
       "containerId": null,
       "originalText": "APIS (NO AUTH YET):",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "HwzGNk13cVVI6yPWKwYZK",
       "type": "text",
-      "x": 1050.9435984293632,
+      "x": 1045.6101430257177,
       "y": 1641.5793285114653,
-      "width": 500.667724609375,
-      "height": 630,
+      "width": 530.99169921875,
+      "height": 840,
       "angle": 0,
       "strokeColor": "#1e1e1e",
       "backgroundColor": "transparent",
@@ -3206,22 +3363,25 @@
       "index": "b1S",
       "roundness": null,
       "seed": 1569399746,
-      "version": 463,
-      "versionNonce": 1653328066,
+      "version": 539,
+      "versionNonce": 1034413279,
       "isDeleted": false,
       "boundElements": [],
-      "updated": 1787919376319,
+      "updated": 1789221315505,
       "link": null,
       "locked": false,
-      "text": "// create payment\nPOST /api/v1/payments\n{\n    sender_id,\n    receiver_id,\n    amount,\n    currency, //auto detect later\n    notes\n}\n\n// view a single payment record\nGET /api/v1/payments/:payment_id\n\n// view account details\nGET /api/v1/accounts/:account_id\n\n// view transaction history for a account\nGET /api/v1/accounts/:account_id/ledger",
+      "text": "// create payment\nPOST /api/v1/payments\n{\n    sender_id,\n    receiver_id,\n    amount,\n    currency, //auto detect later\n    notes\n}\n\n// view a single payment record\nGET /api/v1/payments/:payment_id\n\n// create account\nPOST /api/v1/accounts\n\n// view account details\nGET /api/v1/accounts/:account_id\n\n// deposit\nPOST /api/v1/accounts/:account_id/deposit\n\n// view transaction history for a account\nGET /api/v1/accounts/:account_id/ledger",
       "fontSize": 28,
       "fontFamily": 6,
       "textAlign": "left",
       "verticalAlign": "top",
       "containerId": null,
-      "originalText": "// create payment\nPOST /api/v1/payments\n{\n    sender_id,\n    receiver_id,\n    amount,\n    currency, //auto detect later\n    notes\n}\n\n// view a single payment record\nGET /api/v1/payments/:payment_id\n\n// view account details\nGET /api/v1/accounts/:account_id\n\n// view transaction history for a account\nGET /api/v1/accounts/:account_id/ledger",
+      "originalText": "// create payment\nPOST /api/v1/payments\n{\n    sender_id,\n    receiver_id,\n    amount,\n    currency, //auto detect later\n    notes\n}\n\n// view a single payment record\nGET /api/v1/payments/:payment_id\n\n// create account\nPOST /api/v1/accounts\n\n// view account details\nGET /api/v1/accounts/:account_id\n\n// deposit\nPOST /api/v1/accounts/:account_id/deposit\n\n// view transaction history for a account\nGET /api/v1/accounts/:account_id/ledger",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "29MVb8fk5b6ZtqycasGGF",
@@ -3258,7 +3418,10 @@
       "containerId": null,
       "originalText": "POST /api/v1/payments",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "7Q7bpoZqB6MXCXw2gicrq",
@@ -3283,7 +3446,7 @@
       "version": 2,
       "versionNonce": 1481421506,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1787919540207,
       "link": null,
       "locked": false,
@@ -3295,7 +3458,10 @@
       "containerId": null,
       "originalText": "GET /api/v1/payments/:payment_id",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "Ti4oSFeEaXBbiFi0HBbWn",
@@ -3320,7 +3486,7 @@
       "version": 84,
       "versionNonce": 826157150,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1787919575957,
       "link": null,
       "locked": false,
@@ -3332,7 +3498,10 @@
       "containerId": null,
       "originalText": "GET /api/v1/accounts/:account_id",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "3UFctXdPDtLNQ-ldE-s7j",
@@ -3357,7 +3526,7 @@
       "version": 39,
       "versionNonce": 1366157086,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1787919585282,
       "link": null,
       "locked": false,
@@ -3369,7 +3538,10 @@
       "containerId": null,
       "originalText": "GET /api/v1/accounts/:account_id/ledger",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "Ki7AzHGQekjpmJ7oLkZOh",
@@ -3408,7 +3580,8 @@
       ],
       "updated": 1787919682876,
       "link": null,
-      "locked": false
+      "locked": false,
+      "created": null
     },
     {
       "id": "60Xrez-iOasoN8UqWhNyM",
@@ -3433,7 +3606,7 @@
       "version": 151,
       "versionNonce": 368744798,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1787919682877,
       "link": null,
       "locked": false,
@@ -3445,118 +3618,10 @@
       "containerId": "Ki7AzHGQekjpmJ7oLkZOh",
       "originalText": "Payment Gateway",
       "autoResize": true,
-      "lineHeight": 1.25
-    },
-    {
-      "id": "l3V-DbzWpfDMAZ_I9Z1TJ",
-      "type": "text",
-      "x": 2952.889940897625,
-      "y": 406.9122691852933,
-      "width": 7.3079986572265625,
-      "height": 35,
-      "angle": 0,
-      "strokeColor": "#1e1e1e",
-      "backgroundColor": "transparent",
-      "fillStyle": "solid",
-      "strokeWidth": 2,
-      "strokeStyle": "solid",
-      "roughness": 2,
-      "opacity": 100,
-      "groupIds": [],
-      "frameId": null,
-      "index": "b1XV",
-      "roundness": null,
-      "seed": 292136286,
-      "version": 3,
-      "versionNonce": 812357250,
-      "isDeleted": true,
-      "boundElements": null,
-      "updated": 1787919618536,
-      "link": null,
-      "locked": false,
-      "text": "",
-      "fontSize": 28,
-      "fontFamily": 6,
-      "textAlign": "center",
-      "verticalAlign": "middle",
-      "containerId": "Ki7AzHGQekjpmJ7oLkZOh",
-      "originalText": "",
-      "autoResize": true,
-      "lineHeight": 1.25
-    },
-    {
-      "id": "DjwH7yOTbXbteV8IpP6lB",
-      "type": "text",
-      "x": 2922.5579325358085,
-      "y": 373.3122630817777,
-      "width": 7.3079986572265625,
-      "height": 35,
-      "angle": 0,
-      "strokeColor": "#1e1e1e",
-      "backgroundColor": "transparent",
-      "fillStyle": "solid",
-      "strokeWidth": 2,
-      "strokeStyle": "solid",
-      "roughness": 2,
-      "opacity": 100,
-      "groupIds": [],
-      "frameId": null,
-      "index": "b1Y",
-      "roundness": null,
-      "seed": 2097234014,
-      "version": 10,
-      "versionNonce": 273335518,
-      "isDeleted": true,
-      "boundElements": null,
-      "updated": 1787919617566,
-      "link": null,
-      "locked": false,
-      "text": "",
-      "fontSize": 28,
-      "fontFamily": 6,
-      "textAlign": "center",
-      "verticalAlign": "top",
-      "containerId": null,
-      "originalText": "",
-      "autoResize": true,
-      "lineHeight": 1.25
-    },
-    {
-      "id": "uZfcFpdTOVN_D7fPTXaLD",
-      "type": "text",
-      "x": 2942.0898920695,
-      "y": 439.3122630817777,
-      "width": 7.3079986572265625,
-      "height": 35,
-      "angle": 0,
-      "strokeColor": "#1e1e1e",
-      "backgroundColor": "transparent",
-      "fillStyle": "solid",
-      "strokeWidth": 2,
-      "strokeStyle": "solid",
-      "roughness": 2,
-      "opacity": 100,
-      "groupIds": [],
-      "frameId": null,
-      "index": "b1Z",
-      "roundness": null,
-      "seed": 1589289474,
-      "version": 3,
-      "versionNonce": 1164003230,
-      "isDeleted": true,
-      "boundElements": null,
-      "updated": 1787919614638,
-      "link": null,
-      "locked": false,
-      "text": "",
-      "fontSize": 28,
-      "fontFamily": 6,
-      "textAlign": "center",
-      "verticalAlign": "top",
-      "containerId": null,
-      "originalText": "",
-      "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
     },
     {
       "id": "GQw-_L1s477nehhZVKnnJ",
@@ -3621,7 +3686,8 @@
       "elbowed": true,
       "fixedSegments": null,
       "startIsSpecial": null,
-      "endIsSpecial": null
+      "endIsSpecial": null,
+      "created": null
     },
     {
       "id": "kjWIlWVx7BVJ81jc0vd7a",
@@ -3646,7 +3712,7 @@
       "version": 19,
       "versionNonce": 1970863454,
       "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1787919680063,
       "link": null,
       "locked": false,
@@ -3658,7 +3724,362 @@
       "containerId": "GQw-_L1s477nehhZVKnnJ",
       "originalText": "perform payment",
       "autoResize": true,
-      "lineHeight": 1.25
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": null,
+      "baseFontSize": null
+    },
+    {
+      "id": "20sHxydiWDmDBx04xYE8G",
+      "type": "text",
+      "x": -155.66758388943015,
+      "y": 2242.2375749544717,
+      "width": 375.36773681640625,
+      "height": 280,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 2,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "b1c",
+      "roundness": null,
+      "seed": 361297550,
+      "version": 631,
+      "versionNonce": 1545558737,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1789221039963,
+      "link": null,
+      "locked": false,
+      "text": "4. Outbox -> role of publisher\n    \n    - event_id\n    - event_type\n    - aggregate_id\n    - payload\n    - published_at\n    - created_at",
+      "fontSize": 28,
+      "fontFamily": 6,
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "containerId": null,
+      "originalText": "4. Outbox -> role of publisher\n    \n    - event_id\n    - event_type\n    - aggregate_id\n    - payload\n    - published_at\n    - created_at",
+      "autoResize": true,
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": 1789126196227,
+      "baseFontSize": null
+    },
+    {
+      "id": "IDf-VOUsU8w1pGmpJS8g4",
+      "type": "arrow",
+      "x": 2425.9164287194217,
+      "y": 39.96330386743426,
+      "width": 368.7801417797482,
+      "height": 64.02591507018889,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "b1d",
+      "roundness": null,
+      "seed": 181735199,
+      "version": 3548,
+      "versionNonce": 293494175,
+      "isDeleted": true,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "_aWlacX0vsJZpAsN5ZCCG"
+        }
+      ],
+      "updated": 1789221148189,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          -60.82578079284514
+        ],
+        [
+          -166.43804703268006,
+          -60.82578079284514
+        ],
+        [
+          -166.43804703268006,
+          -62.42581741393889
+        ],
+        [
+          -348.7801417797482,
+          -62.42581741393889
+        ],
+        [
+          -348.7801417797482,
+          -64.02591507018889
+        ],
+        [
+          -368.7801417797482,
+          -64.02591507018889
+        ]
+      ],
+      "startBinding": {
+        "elementId": "FhMzPjE_yyTxWLFlYPafv",
+        "mode": "orbit",
+        "fixedPoint": [
+          0.2989864237905334,
+          -0.008445945292863695
+        ]
+      },
+      "endBinding": {
+        "elementId": "gdX9lE-0YkKsdLhBw6-aW",
+        "mode": "orbit",
+        "fixedPoint": [
+          1.0128413367073568,
+          0.7748819608935341
+        ]
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": true,
+      "moveMidPointsWithElement": false,
+      "fixedSegments": [
+        {
+          "index": 2,
+          "start": [
+            0,
+            -60.82578079284514
+          ],
+          "end": [
+            -166.43804703268006,
+            -60.82578079284514
+          ]
+        },
+        {
+          "index": 3,
+          "start": [
+            -166.43804703268006,
+            -60.82578079284514
+          ],
+          "end": [
+            -166.43804703268006,
+            -60.82578079284514
+          ]
+        },
+        {
+          "index": 4,
+          "start": [
+            -166.43804703268006,
+            -62.42581741393889
+          ],
+          "end": [
+            -348.7801417797482,
+            -62.42581741393889
+          ]
+        }
+      ],
+      "startIsSpecial": false,
+      "endIsSpecial": false,
+      "created": 1789221077591
+    },
+    {
+      "id": "_aWlacX0vsJZpAsN5ZCCG",
+      "type": "text",
+      "x": 2121.8683047824447,
+      "y": -12.53669613256573,
+      "width": 150.41986083984375,
+      "height": 25,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "b1e",
+      "roundness": null,
+      "seed": 601270033,
+      "version": 52,
+      "versionNonce": 307695569,
+      "isDeleted": true,
+      "boundElements": [],
+      "updated": 1789221148189,
+      "link": null,
+      "locked": false,
+      "text": "READ FROM DB",
+      "fontSize": 20,
+      "fontFamily": 6,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "IDf-VOUsU8w1pGmpJS8g4",
+      "originalText": "READ FROM DB",
+      "autoResize": true,
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": 1789221077591,
+      "baseFontSize": null
+    },
+    {
+      "id": "nBtniR4EBMMRUUB7rc8bO",
+      "type": "arrow",
+      "x": 2057.1362869396735,
+      "y": -46.4190536525748,
+      "width": 331.199951171875,
+      "height": 86.38235752000907,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 2,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "b1f",
+      "roundness": null,
+      "seed": 538245695,
+      "version": 3321,
+      "versionNonce": 1144511487,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "8G7VnedqiCLGsLFkOU_8j"
+        }
+      ],
+      "updated": 1789221247863,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          331.199951171875,
+          0
+        ],
+        [
+          331.199951171875,
+          86.38235752000907
+        ]
+      ],
+      "startBinding": {
+        "elementId": "gdX9lE-0YkKsdLhBw6-aW",
+        "mode": "orbit",
+        "fixedPoint": [
+          1.0128413367073568,
+          0.6990824808048709
+        ]
+      },
+      "endBinding": {
+        "elementId": "FhMzPjE_yyTxWLFlYPafv",
+        "mode": "orbit",
+        "fixedPoint": [
+          0.1402861636384316,
+          -0.008445945292863685
+        ]
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": true,
+      "moveMidPointsWithElement": false,
+      "fixedSegments": null,
+      "startIsSpecial": null,
+      "endIsSpecial": null,
+      "created": 1789221150456
+    },
+    {
+      "id": "8G7VnedqiCLGsLFkOU_8j",
+      "type": "text",
+      "x": 2329.1263076916266,
+      "y": -33.3190780666373,
+      "width": 150.41986083984375,
+      "height": 25,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "b1g",
+      "roundness": null,
+      "seed": 890853983,
+      "version": 54,
+      "versionNonce": 1381484113,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1789221230754,
+      "link": null,
+      "locked": false,
+      "text": "READ FROM DB",
+      "fontSize": 20,
+      "fontFamily": 6,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "nBtniR4EBMMRUUB7rc8bO",
+      "originalText": "READ FROM DB",
+      "autoResize": true,
+      "lineHeight": 1.25,
+      "labelPosition": null,
+      "created": 1789221150456,
+      "baseFontSize": null
+    },
+    {
+      "id": "wqXqXsgSn1W8dVIcZZzwf",
+      "type": "text",
+      "x": 905.5720197889557,
+      "y": 479.70432350997316,
+      "width": 379.27960205078125,
+      "height": 25,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "b1h",
+      "roundness": null,
+      "seed": 1487518257,
+      "version": 20,
+      "versionNonce": 935331775,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1789221321376,
+      "created": 1789221320439,
+      "link": null,
+      "locked": false,
+      "text": "POST /api/v1/accounts/:account_id/deposit",
+      "fontSize": 20,
+      "baseFontSize": null,
+      "fontFamily": 6,
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "containerId": null,
+      "originalText": "POST /api/v1/accounts/:account_id/deposit",
+      "autoResize": true,
+      "lineHeight": 1.25,
+      "labelPosition": null
     }
   ],
   "appState": {

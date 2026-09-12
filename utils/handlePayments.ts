@@ -8,6 +8,15 @@ export const handlePayment = async (paymentId: bigint) => {
         const query = getPaymentByIdQuery(paymentId);
         const paymentResult = await pool.query(query);
         const payment = paymentResult.rows[0];
+
+        if (!payment) {
+            return {
+                success: false,
+                retryable: false,
+                message: 'Payment not found for payment ID: ' + paymentId,
+            };
+        }
+
         const payment_type = payment.payment_type;
 
         // check if payment is deposit or transfer
@@ -41,18 +50,30 @@ export const transferAmount = async (paymentId: bigint) => {
         const payment = paymentResult.rows[0];
 
         if (!payment) {
-            throw new Error('Payment not found');
+            await client.query("ROLLBACK");
+            return {
+                success: false,
+                retryable: false,
+                message: 'Payment not found for payment ID: ' + paymentId,
+            };
         }
 
         if (payment.status === 'completed') {
+            await client.query("COMMIT");
             return {
                 success: true,
+                retryable: false,
                 message: 'Payment already completed for payment ID: ' + paymentId,
             };
         }
 
         if (payment.status !== 'pending') {
-            throw new Error('Payment is not in pending status');
+            await client.query("ROLLBACK");
+            return {
+                success: false,
+                retryable: false,
+                message: 'Payment is not in pending status for payment ID: ' + paymentId,
+            };
         }
 
         // Operation 1: Update payment status to 'processing'
@@ -73,18 +94,36 @@ export const transferAmount = async (paymentId: bigint) => {
         })
 
         if (!sender) {
-            throw new Error('Sender account does not exist');
+            await client.query(updatePaymentStatusQuery(paymentId, 'failed'));
+            await client.query("COMMIT");
+            return {
+                success: false,
+                retryable: false,
+                message: 'Sender account does not exist for payment ID: ' + paymentId,
+            };
         }
 
         if (!receiver) {
-            throw new Error('Receiver account does not exist');
+            await client.query(updatePaymentStatusQuery(paymentId, 'failed'));
+            await client.query("COMMIT");
+            return {
+                success: false,
+                retryable: false,
+                message: 'Receiver account does not exist for payment ID: ' + paymentId,
+            };
         }
 
         // Operation 3: Check if sender has enough balance
         const senderBalance = Number(sender.balance);
 
         if (senderBalance < Number(payment.amount)) {
-            throw new Error('Insufficient balance in sender account');
+            await client.query(updatePaymentStatusQuery(paymentId, 'failed'));
+            await client.query("COMMIT");
+            return {
+                success: false,
+                retryable: false,
+                message: 'Insufficient balance in sender account for payment ID: ' + paymentId,
+            };
         }
 
         // Operation 4: Deduct amount from sender and add to receiver
@@ -108,6 +147,7 @@ export const transferAmount = async (paymentId: bigint) => {
 
         return {
             success: true,
+            retryable: false,
             message: 'Payment processed successfully for payment ID: ' + paymentId,
         };
 
@@ -121,6 +161,7 @@ export const transferAmount = async (paymentId: bigint) => {
 
         return {
             success: false,
+            retryable: true,
             message: 'Error processing payment',
             error: (error as Error).message
         }
@@ -143,11 +184,21 @@ export const depositPayment = async (paymentId: bigint) => {
         const payment = paymentResult.rows[0];
 
         if (!payment) {
-            throw new Error('Payment not found');
+            await client.query("ROLLBACK");
+            return {
+                success: false,
+                retryable: false,
+                message: 'Payment not found for payment ID: ' + paymentId,
+            };
         }
 
         if (payment.status !== 'pending') {
-            throw new Error('Payment is not in pending status');
+            await client.query("ROLLBACK");
+            return {
+                success: false,
+                retryable: false,
+                message: 'Payment is not in pending status for payment ID: ' + paymentId,
+            };
         }
 
         // Operation 1: Update payment status to 'processing'
@@ -159,7 +210,13 @@ export const depositPayment = async (paymentId: bigint) => {
         const receiver = (await client.query(receiverQuery)).rows[0];
 
         if (!receiver) {
-            throw new Error('Receiver account does not exist');
+            await client.query(updatePaymentStatusQuery(paymentId, 'failed'));
+            await client.query("COMMIT");
+            return {
+                success: false,
+                retryable: false,
+                message: 'Receiver account does not exist for payment ID: ' + paymentId,
+            };
         }
 
         // Operation 3: Add amount to receiver
@@ -178,6 +235,7 @@ export const depositPayment = async (paymentId: bigint) => {
 
         return {
             success: true,
+            retryable: false,
             message: 'Deposit processed successfully for payment ID: ' + paymentId,
         };
     } catch (error) {
@@ -188,6 +246,7 @@ export const depositPayment = async (paymentId: bigint) => {
         });
         return {
             success: false,
+            retryable: true,
             message: 'Error processing deposit',
             error: (error as Error).message
         }

@@ -23,9 +23,17 @@ const updateOutboxEntryAsPublishedQuery = (event_id: bigint) => {
     };
 }
 
+const incrementAttemptCountQuery = (event_id: bigint) => {
+    return {
+        text: 'UPDATE outbox_events SET attemps = attempts + 1 WHERE event_id = $1 RETURNING *',
+        values: [event_id],
+    }
+}
+
 
 export {
     createOutboxEntryQuery,
     getUnpublishedOutboxEntriesQuery,
     updateOutboxEntryAsPublishedQuery,
+    incrementAttemptCountQuery
 }

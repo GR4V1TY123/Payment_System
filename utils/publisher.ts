@@ -2,29 +2,22 @@
 
 import { pool } from "../messaging/db";
 import { publishToQueue } from "../messaging/paymentQueue";
-import { getUnpublishedOutboxEntriesQuery, updateOutboxEntryAsPublishedQuery } from "../query/outboxQueries";
+import { getUnpublishedOutboxEntriesQuery, incrementAttemptCountQuery, updateOutboxEntryAsPublishedQuery } from "../query/outboxQueries";
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const getUnpublishedEvents = async () => {
-    try {
-        const query = getUnpublishedOutboxEntriesQuery();
-        const result = await pool.query(query);
-        const unpublishedEvents = result.rows.map((row) => ({
-            event_id: row.event_id,
-            event_type: row.event_type,
-            aggregate_id: row.aggregate_id,
-            payload: row.payload,
-            created_at: row.created_at,
-        }));
+    const query = getUnpublishedOutboxEntriesQuery();
+    const result = await pool.query(query);
+    const unpublishedEvents = result.rows.map((row) => ({
+        event_id: row.event_id,
+        event_type: row.event_type,
+        aggregate_id: row.aggregate_id,
+        payload: row.payload,
+        created_at: row.created_at,
+    }));
 
-        return unpublishedEvents;
-    } catch (error) {
-        console.error({
-            message: 'Error fetching unpublished payments from outbox',
-            error: (error as Error).message
-        });
-    }
+    return unpublishedEvents;
 }
 
 export const fetchAndPublishPayments = async () => {
@@ -50,6 +43,10 @@ export const fetchAndPublishPayments = async () => {
                     });
 
                 } catch (error) {
+
+                    const incrementQuery = incrementAttemptCountQuery(event.event_id);
+                    await pool.query(incrementQuery);
+
                     console.error({
                         message: `Error publishing payment with event_id: ${event.event_id} to RabbitMQ`,
                         error: (error as Error).message
