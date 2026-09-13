@@ -1,21 +1,21 @@
 // worker for processing payments from RabbitMQ queue
 import amqp from 'amqplib';
 import { handlePayment } from "../utils/handlePayments";
+import { workerLogger } from '../utils/logger';
 
 const MAX_RETRIES = 3;
 
 const connection = await amqp.connect(
     process.env.RABBITMQ_URL ?? 'amqp://localhost:5672'
 ).then(conn => {
-    console.log({
-        message: 'Connected to RabbitMQ',
-        url: process.env.RABBITMQ_URL ?? 'amqp://localhost:5672'
+    workerLogger.info({
+        message: 'Connected to RabbitMQ for worker',
     });
     return conn;
 }).catch(err => {
-    console.log({
-        message: 'Failed to connect to RabbitMQ',
-        error: err
+    workerLogger.error({
+        message: 'Failed to connect to RabbitMQ for worker',
+        error: (err as Error).message
     });
     process.exit(1);
 })
@@ -42,10 +42,22 @@ for (const q of retryQueues) {
     });
 }
 
+// set up deadletter queue for messages that exceed max retries
+await channel.assertQueue("payment_dlq", {
+    durable: true,
+    arguments: {
+        "x-dead-letter-exchange": "",
+        "x-dead-letter-routing-key": queue
+    }
+});
+
 channel.consume(queue, async (msg) => {
     if (msg) {
 
-        console.log(`Received message from RabbitMQ queue: ${msg}`);
+        workerLogger.info({
+            message: 'Received payment data from RabbitMQ queue for processing',
+            content: msg.content.toString()
+        });
 
         const paymentData = JSON.parse(msg.content.toString());
         const paymentId = paymentData.payment_id;
@@ -58,8 +70,8 @@ channel.consume(queue, async (msg) => {
             // Acknowledge the message after processing
             if (!result.success) {
                 if (!result.retryable) {
-                    console.log({
-                        message: `Non-retryable error occurred while processing paymentId: ${paymentId}. Discarding message.`,
+                    workerLogger.error({
+                        message: `Non-retryable error processing payment with paymentId: ${paymentId}. Sending to deadletter queue.`,
                         error: result.message
                     });
                     channel.ack(msg);
@@ -68,9 +80,8 @@ channel.consume(queue, async (msg) => {
                 throw new Error(`Failed to process payment: ${result.message}`);
             }
 
-            console.log({
-                message: `Successfully processed payment data from RabbitMQ queue`,
-                paymentId: paymentId,
+            workerLogger.info({
+                message: `Successfully processed payment with paymentId: ${paymentId}`,
             });
 
             channel.ack(msg);
@@ -87,8 +98,11 @@ channel.consume(queue, async (msg) => {
                     retryQueue = retryQueues[2];
                 }
 
-                console.log({
-                    message: `Retrying payment processing for paymentId: ${paymentId} in queue: ${retryQueue}`,
+                workerLogger.warn({
+                    message: `Error processing payment with paymentId: ${paymentId}. Retrying in ${baseTTL * Math.pow(2, attemptCount)} ms.`,
+                    error: (error as Error).message,
+                    attemptCount: attemptCount + 1,
+                    retryQueue: retryQueue
                 });
 
                 const delays = [
@@ -113,10 +127,23 @@ channel.consume(queue, async (msg) => {
                 await channel.waitForConfirms();
                 channel.ack(msg);
             } else {
-                console.log({
-                    message: `Max retries reached for paymentId: ${paymentId}. Discarding message.`,
-                    attemptCount: attemptCount
+                workerLogger.error({
+                    message: `Max retries reached for payment with paymentId: ${paymentId}. Sending to deadletter queue.`,
+                    error: (error as Error).message,
+                    attemptCount: attemptCount + 1
                 });
+                channel.sendToQueue(
+                    "payment_dlq",
+                    msg.content,
+                    {
+                        persistent: true,
+                        headers: {
+                            'x-attempts': attemptCount + 1
+                        },
+                    }
+                );
+                await channel.waitForConfirms();
+                
                 channel.ack(msg); // Acknowledge to remove from queue
             }
         }

@@ -11,9 +11,4 @@ export const publishToQueue = async (paymentData: any) => {
     );
 
     await channel.waitForConfirms(); // Wait for the message to be confirmed by RabbitMQ
-
-    console.log({
-        message: `Payment data sent to RabbitMQ queue for processing`,
-        paymentId: paymentData.payment_id
-    });
 };

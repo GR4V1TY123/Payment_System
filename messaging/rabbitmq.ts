@@ -1,5 +1,6 @@
 // Connect rabbitmq to the application
 import amqp, { ConfirmChannel } from 'amqplib';
+import { paymentQueueLogger } from '../utils/logger';
 
 const RABBITMQ_URL = process.env.RABBITMQ_URL ?? 'amqp://localhost:5672';
 
@@ -13,12 +14,12 @@ export async function connectRabbitMQ() {
         const queue = 'payment_queue';
         await rabbitChannel.assertQueue(queue, { durable: true });
 
-        console.log({
-            message: `Connected to RabbitMQ and asserted queue: ${queue}`,
+        paymentQueueLogger.info({
+            message: 'Connected to RabbitMQ',
         });
         return rabbitChannel;
     } catch (error) {
-        console.log({
+        paymentQueueLogger.error({
             message: 'Failed to connect to RabbitMQ',
             error: (error as Error).message
         });

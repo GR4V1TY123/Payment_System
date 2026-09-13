@@ -3,6 +3,7 @@ import { runQuery } from "../utils/query";
 import { createPaymentQuery, getPaymentDetailsQuery } from "../query/paymentQueries";
 import { pool } from "../messaging/db";
 import { createOutboxEntryQuery } from "../query/outboxQueries";
+import { apiLogger } from "../utils/logger";
 
 const createPayment = async (
     request: FastifyRequest<{
@@ -21,9 +22,10 @@ const createPayment = async (
     const { idempotency_key } = request.headers as { idempotency_key: string };
     const payment_type = "TRANSFER"; // Set payment type as 'transfer'
 
-    request.log.info({
+    apiLogger.info({
         message: `Received request to create payment from ${sender_id} to ${receiver_id} of amount ${amount} ${currency}`,
         body: request.body,
+        headers: request.headers
     });
 
     const client = await pool.connect();
@@ -48,9 +50,10 @@ const createPayment = async (
         await client.query("COMMIT");
 
         // Send payment data to RabbitMQ for further processing
-        request.log.info({
+        apiLogger.info({
             message: `Successfully created payment record from ${sender_id} to ${receiver_id} of amount ${amount} ${currency}.`,
             rowCount: result.rowCount,
+            payment_id: payment_id
         });
 
         reply.status(202).send({
@@ -62,7 +65,7 @@ const createPayment = async (
 
     } catch (error) {
         await client.query("ROLLBACK");
-        request.log.error({
+        apiLogger.error({
             message: `Error creating payment from ${sender_id} to ${receiver_id} of amount ${amount} ${currency}`,
             error: (error as Error).message
         });
@@ -84,7 +87,7 @@ const getPaymentDetails = async (
     reply: FastifyReply
 ) => {
 
-    request.log.info({
+    apiLogger.info({
         message: `Received request to get payment details for payment_id: ${request.params.payment_id}`,
         params: request.params
     });
@@ -95,7 +98,7 @@ const getPaymentDetails = async (
 
         const result = await runQuery(query);
 
-        request.log.info({
+        apiLogger.info({
             message: `Successfully retrieved payment details for payment_id: ${payment_id}`,
             rowCount: result.rowCount,
         });
@@ -107,7 +110,7 @@ const getPaymentDetails = async (
         });
     } catch (error) {
 
-        request.log.error({
+        apiLogger.error({
             message: `Error retrieving payment details for payment_id: ${request.params.payment_id}`,
             error: (error as Error).message
         });

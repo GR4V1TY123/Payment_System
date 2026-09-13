@@ -1,6 +1,7 @@
 import { pool } from "../messaging/db";
 import { creditAccountBalanceQuery, debitAccountBalanceQuery, getAccountInfoQuery, getAccountInfowithLockQuery } from "../query/accountQueries";
 import { createLedgerEntryQuery, getPaymentByIdQuery, updatePaymentStatusQuery } from "../query/paymentQueries";
+import { databaseLogger } from "./logger";
 import { lockQuery } from "./query";
 
 export const handlePayment = async (paymentId: bigint) => {
@@ -28,9 +29,9 @@ export const handlePayment = async (paymentId: bigint) => {
             return await transferAmount(paymentId);
         }
     } catch (error) {
-        console.log({
+        databaseLogger.error({
             message: `Error handling payment with ID: ${paymentId}`,
-            error
+            error: (error as Error).message
         });
         throw error;
     }
@@ -44,7 +45,6 @@ export const transferAmount = async (paymentId: bigint) => {
 
         // lock payment
         const query = lockQuery(getPaymentByIdQuery(paymentId));
-        console.log(`Executing query to fetch payment details: ${query.text} with values: ${query.values}`);
 
         const paymentResult = await client.query(query);
         const payment = paymentResult.rows[0];
@@ -145,6 +145,11 @@ export const transferAmount = async (paymentId: bigint) => {
 
         await client.query("COMMIT");
 
+        databaseLogger.info({
+            message: `Successfully processed transfer payment with ID: ${paymentId}`,
+            payment_id: paymentId
+        });
+
         return {
             success: true,
             retryable: false,
@@ -154,9 +159,9 @@ export const transferAmount = async (paymentId: bigint) => {
 
     } catch (error) {
         await client.query("ROLLBACK");
-        console.log({
+        databaseLogger.error({
             message: `Error processing payment with ID: ${paymentId}`,
-            error
+            error: (error as Error).message
         });
 
         return {
@@ -178,7 +183,6 @@ export const depositPayment = async (paymentId: bigint) => {
         await client.query("BEGIN");
 
         const query = lockQuery(getPaymentByIdQuery(paymentId));
-        console.log(`Executing query to fetch payment details: ${query.text} with values: ${query.values}`);
 
         const paymentResult = await client.query(query);
         const payment = paymentResult.rows[0];
@@ -233,6 +237,11 @@ export const depositPayment = async (paymentId: bigint) => {
 
         await client.query("COMMIT");
 
+        databaseLogger.info({
+            message: `Successfully processed deposit for payment ID: ${paymentId}`,
+            payment_id: paymentId
+        });
+
         return {
             success: true,
             retryable: false,
@@ -240,9 +249,9 @@ export const depositPayment = async (paymentId: bigint) => {
         };
     } catch (error) {
         await client.query("ROLLBACK");
-        console.log({
+        databaseLogger.error({
             message: `Error processing deposit with ID: ${paymentId}`,
-            error
+            error: (error as Error).message
         });
         return {
             success: false,

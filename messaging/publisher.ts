@@ -1,4 +1,5 @@
 
+import { publisherLogger } from '../utils/logger';
 import { fetchAndPublishPayments } from '../utils/publisher';
 import { connectRabbitMQ } from './rabbitmq';
 
@@ -7,8 +8,8 @@ const start = async () => {
         await connectRabbitMQ();
         await fetchAndPublishPayments();
     } catch (error) {
-        console.error({
-            message: 'Error in publisher',
+        publisherLogger.error({
+            message: 'Error starting the publisher',
             error: (error as Error).message
         });
         process.exit(1);

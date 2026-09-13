@@ -3,6 +3,7 @@
 import { pool } from "../messaging/db";
 import { publishToQueue } from "../messaging/paymentQueue";
 import { getUnpublishedOutboxEntriesQuery, incrementAttemptCountQuery, updateOutboxEntryAsPublishedQuery } from "../query/outboxQueries";
+import { publisherLogger } from "./logger";
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -36,9 +37,8 @@ export const fetchAndPublishPayments = async () => {
 
                     const query = updateOutboxEntryAsPublishedQuery(event.event_id);
                     await pool.query(query);
-                    console.log({
+                    publisherLogger.info({
                         message: `Successfully published payment with event_id: ${event.event_id} to RabbitMQ and marked as published.`,
-                        event_id: event.event_id,
                         payment_id: event.payload.payment_id
                     });
 
@@ -47,15 +47,16 @@ export const fetchAndPublishPayments = async () => {
                     const incrementQuery = incrementAttemptCountQuery(event.event_id);
                     await pool.query(incrementQuery);
 
-                    console.error({
-                        message: `Error publishing payment with event_id: ${event.event_id} to RabbitMQ`,
-                        error: (error as Error).message
+                    publisherLogger.error({
+                        message: `Error publishing payment with event_id: ${event.event_id} to RabbitMQ. Incremented attempt count.`,
+                        error: (error as Error).message,
+                        payment_id: event.payload.payment_id
                     });
                 }
             }
         } catch (error) {
-            console.error({
-                message: 'Error in getUnpublishedPayments loop',
+            publisherLogger.error({
+                message: 'Error fetching unpublished events from the outbox table',
                 error: (error as Error).message
             });
             await sleep(2000); // Wait for 2 seconds before retrying

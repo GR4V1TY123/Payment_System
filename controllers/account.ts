@@ -4,6 +4,7 @@ import { createAccountQuery, getAccountInfoQuery, getTransactionHistoryQuery } f
 import { createPaymentQuery } from "../query/paymentQueries";
 import { pool } from "../messaging/db";
 import { createOutboxEntryQuery } from "../query/outboxQueries";
+import { apiLogger } from "../utils/logger";
 
 const createAccount = async (
     request: FastifyRequest<{
@@ -17,9 +18,9 @@ const createAccount = async (
 ) => {
     const { name, email, currency } = request.body;
 
-    request.log.info({
+    apiLogger.info({
         message: `Received request to create account for ${name} with email ${email}`,
-        body: request.body
+        body: request.body,
     });
 
     try {
@@ -27,7 +28,7 @@ const createAccount = async (
 
         const result = await runQuery(query);
 
-        request.log.info({
+        apiLogger.info({
             message: `Successfully created account for ${name} with email ${email}`,
             rowCount: result.rowCount,
         });
@@ -40,7 +41,7 @@ const createAccount = async (
         });
 
     } catch (error) {
-        request.log.error({
+        apiLogger.error({
             message: `Error creating account for ${name} with email ${email}`,
             error: (error as Error).message
         });
@@ -61,7 +62,7 @@ const getAccountInfo = async (
 ) => {
     const { account_id } = request.params as { account_id: string };
 
-    request.log.info({
+    apiLogger.info({
         message: `Received request to get account info for account_id: ${account_id}`,
         params: request.params
     });
@@ -70,7 +71,7 @@ const getAccountInfo = async (
         const query = getAccountInfoQuery(BigInt(account_id));
         const result = await runQuery(query);
 
-        request.log.info({
+        apiLogger.info({
             message: `Successfully retrieved account info for account_id: ${account_id}`,
             rowCount: result.rowCount,
         });
@@ -81,7 +82,7 @@ const getAccountInfo = async (
             rows: result.rows
         });
     } catch (error) {
-        request.log.error({
+        apiLogger.error({
             message: `Error retrieving account info for account_id: ${account_id}`,
             error: (error as Error).message
         });
@@ -103,7 +104,7 @@ const getTransactionHistory = async (
 ) => {
     const { account_id } = request.params as { account_id: string };
 
-    request.log.info({
+    apiLogger.info({
         message: `Received request to get transaction history for account_id: ${account_id}`,
         params: request.params
     });
@@ -112,7 +113,7 @@ const getTransactionHistory = async (
         const query = getTransactionHistoryQuery(account_id);
         const result = await runQuery(query);
 
-        request.log.info({
+        apiLogger.info({
             message: `Successfully retrieved transaction history for account_id: ${account_id}`,
             rowCount: result.rowCount,
         });
@@ -123,7 +124,7 @@ const getTransactionHistory = async (
             rows: result.rows
         });
     } catch (error) {
-        request.log.error({
+        apiLogger.error({
             message: `Error retrieving transaction history for account_id: ${account_id}`,
             error: (error as Error).message
         });
@@ -153,9 +154,11 @@ const depositPayment = async (
     const { idempotency_key } = request.headers as { idempotency_key: string };
     const payment_type = 'DEPOSIT'; // Set payment type as 'deposit'
 
-    request.log.info({
+    apiLogger.info({
         message: `Received request to deposit payment to account_id: ${account_id} of amount ${amount} ${currency}`,
-        body: request.body
+        params: request.params,
+        body: request.body,
+        headers: request.headers
     });
 
     const client = await pool.connect();
@@ -178,9 +181,9 @@ const depositPayment = async (
         await client.query("COMMIT");
 
         // Send payment data to RabbitMQ for further processing
-        request.log.info({
-            message: `Successfully created payment record to deposit amount ${amount} ${currency}.`,
-            rows: result.rows
+        apiLogger.info({
+            message: `Successfully deposited payment to account_id: ${account_id} of amount ${amount} ${currency}.`,
+            rowCount: result.rowCount,
         });
 
         // await processPayment(result.rows[0]);
@@ -192,7 +195,8 @@ const depositPayment = async (
         });
 
     } catch (error) {
-        request.log.error({
+        await client.query("ROLLBACK");
+        apiLogger.error({
             message: `Error depositing payment to account_id: ${account_id} of amount ${amount} ${currency}`,
             error: (error as Error).message
         });
