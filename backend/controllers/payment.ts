@@ -4,6 +4,7 @@ import { createPaymentQuery, getPaymentDetailsQuery } from "../query/paymentQuer
 import { pool } from "../messaging/db";
 import { createOutboxEntryQuery } from "../query/outboxQueries";
 import { apiLogger } from "../utils/logger";
+import { paymentsCreated, paymentsFailed } from "../utils/metrics";
 
 const createPayment = async (
     request: FastifyRequest<{
@@ -40,7 +41,8 @@ const createPayment = async (
         const payment = result.rows[0];
         const { payment_id } = payment;
         const payload = {
-            payment_id: payment_id.toString()
+            payment_id: payment_id.toString(),
+            payment_type: payment_type,
         }
 
         // make outbox record in outbox table
@@ -56,6 +58,8 @@ const createPayment = async (
             payment_id: payment_id
         });
 
+        paymentsCreated.inc({ payment_type: payment_type });
+
         reply.status(202).send({
             success: true,
             rowCount: result.rowCount,
@@ -69,6 +73,8 @@ const createPayment = async (
             message: `Error creating payment from ${sender_id} to ${receiver_id} of amount ${amount} ${currency}`,
             error: (error as Error).message
         });
+
+        paymentsFailed.inc({ payment_type: payment_type });
         reply.status(500).send({
             success: false,
             message: 'Error creating payment',

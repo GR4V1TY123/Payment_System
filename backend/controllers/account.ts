@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { runQuery } from "../utils/query";
-import { createAccountQuery, getAccountInfoQuery, getTransactionHistoryQuery } from "../query/accountQueries";
+import { createAccountQuery, getAccountInfoQuery, getPaymentHistoryQuery, getTransactionHistoryQuery } from "../query/accountQueries";
 import { createPaymentQuery } from "../query/paymentQueries";
 import { pool } from "../messaging/db";
 import { createOutboxEntryQuery } from "../query/outboxQueries";
@@ -136,6 +136,48 @@ const getTransactionHistory = async (
     }
 }
 
+const getPaymentHistory = async (
+    request: FastifyRequest<{
+        Params: {
+            account_id: string;
+        };
+    }>,
+    reply: FastifyReply
+) => {
+    const { account_id } = request.params as { account_id: string };
+
+    apiLogger.info({
+        message: `Received request to get payment history for account_id: ${account_id}`,
+        params: request.params
+    });
+
+    try {
+        const query = getPaymentHistoryQuery(account_id);
+        const result = await runQuery(query);
+
+        apiLogger.info({
+            message: `Successfully retrieved payment history for account_id: ${account_id}`,
+            rowCount: result.rowCount,
+        });
+
+        reply.status(200).send({
+            success: true,
+            message: 'Payment history retrieved successfully',
+            rows: result.rows
+        });
+    } catch (error) {
+        apiLogger.error({
+            message: `Error retrieving payment history for account_id: ${account_id}`,
+            error: (error as Error).message
+        });
+        reply.status(500).send({
+            success: false,
+            message: 'Error retrieving payment history',
+            error: (error as Error).message
+        });
+    }
+}
+
 const depositPayment = async (
     request: FastifyRequest<{
         Params: {
@@ -212,5 +254,6 @@ export {
     createAccount,
     getAccountInfo,
     getTransactionHistory,
-    depositPayment
+    depositPayment,
+    getPaymentHistory
 };

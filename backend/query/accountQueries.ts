@@ -14,7 +14,7 @@ const getAccountInfowithLockQuery = (accountId1: bigint, accountId2: bigint) => 
 
 const getTransactionHistoryQuery = (accountId: string) => {
     return {
-        text: 'SELECT * FROM payments WHERE sender_id = $1 OR receiver_id = $1 ORDER BY created_at DESC',
+        text: 'SELECT * FROM ledger_entries WHERE account_id = $1 ORDER BY created_at DESC',
         values: [accountId],
     };
 }
@@ -57,6 +57,13 @@ const debitAccountBalanceQuery = (accountId: bigint, amount: number) => {
     }
 }
 
+const getPaymentHistoryQuery = (accountId: string) => {
+    return {
+        text: 'SELECT * FROM payments WHERE sender_id = $1 OR receiver_id = $1 ORDER BY created_at DESC',
+        values: [accountId],
+    };
+}
+
 export {
     getAccountInfoQuery,
     getTransactionHistoryQuery,
@@ -65,5 +72,6 @@ export {
     checkAccountBalanceQuery,
     creditAccountBalanceQuery,
     debitAccountBalanceQuery,
-    getAccountInfowithLockQuery
+    getAccountInfowithLockQuery,
+    getPaymentHistoryQuery
 }

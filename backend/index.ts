@@ -1,20 +1,32 @@
-import './apis/accounts';
-import './apis/payments';
-import fastify from './app';
+import client from 'prom-client';
+import { buildFastify } from './app';
 
-import { connectRabbitMQ } from './messaging/rabbitmq';
-await connectRabbitMQ();
+import paymentRoutes from './apis/payments';
+import accountRoutes from './apis/accounts';
 
-const port = Number(process.env.PORT ?? 3000);
+const apiServer = buildFastify();
+const register = client.register;
 
-fastify.get('/health', async (request, reply) => {
+const port = Number(process.env.API_PORT ?? 3000);
+
+apiServer.register(paymentRoutes);
+apiServer.register(accountRoutes);
+
+apiServer.get('/health', async (request, reply) => {
   reply.status(200).send({
     success: true,
     message: 'Server is healthy'
   });
 });
 
-await fastify.listen({ 
-  port, 
-  host: 'localhost' 
+apiServer.get('/metrics', async (request, reply) => {
+  reply.header('Content-Type', register.contentType);
+  return register.metrics();
 });
+
+await apiServer.listen({ 
+  port, 
+  host: '0.0.0.0' 
+});
+
+export { apiServer };

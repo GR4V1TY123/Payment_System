@@ -2,24 +2,11 @@ import { pool } from "../messaging/db";
 import { creditAccountBalanceQuery, debitAccountBalanceQuery, getAccountInfoQuery, getAccountInfowithLockQuery } from "../query/accountQueries";
 import { createLedgerEntryQuery, getPaymentByIdQuery, updatePaymentStatusQuery } from "../query/paymentQueries";
 import { databaseLogger } from "./logger";
+import { paymentsAmount, paymentsDuration } from "./metrics";
 import { lockQuery } from "./query";
 
-export const handlePayment = async (paymentId: bigint) => {
+export const handlePayment = async (paymentId: bigint, payment_type: string) => {
     try {
-        const query = getPaymentByIdQuery(paymentId);
-        const paymentResult = await pool.query(query);
-        const payment = paymentResult.rows[0];
-
-        if (!payment) {
-            return {
-                success: false,
-                retryable: false,
-                message: 'Payment not found for payment ID: ' + paymentId,
-            };
-        }
-
-        const payment_type = payment.payment_type;
-
         // check if payment is deposit or transfer
         if (payment_type === 'DEPOSIT') {
             // deposit payment
@@ -29,15 +16,12 @@ export const handlePayment = async (paymentId: bigint) => {
             return await transferAmount(paymentId);
         }
     } catch (error) {
-        databaseLogger.error({
-            message: `Error handling payment with ID: ${paymentId}`,
-            error: (error as Error).message
-        });
         throw error;
     }
 }
 
 export const transferAmount = async (paymentId: bigint) => {
+    const startTime = Date.now();
     const client = await pool.connect();
     try {
         // Transactional operations for payment processing
@@ -145,9 +129,14 @@ export const transferAmount = async (paymentId: bigint) => {
 
         await client.query("COMMIT");
 
+        const duration = (Date.now() - startTime) / 1000; // duration in seconds
+        paymentsDuration.observe({ payment_type: 'TRANSFER' }, duration);
+        paymentsAmount.observe({ payment_type: 'TRANSFER' }, Number(payment.amount));
+
         databaseLogger.info({
-            message: `Successfully processed transfer payment with ID: ${paymentId}`,
-            payment_id: paymentId
+            message: `Successfully processed payment with ID: ${paymentId}`,
+            payment_id: paymentId,
+            duration: duration
         });
 
         return {
@@ -159,9 +148,12 @@ export const transferAmount = async (paymentId: bigint) => {
 
     } catch (error) {
         await client.query("ROLLBACK");
+        const duration = (Date.now() - startTime) / 1000; // duration in seconds
+        paymentsDuration.observe({ payment_type: 'TRANSFER' }, duration);
         databaseLogger.error({
             message: `Error processing payment with ID: ${paymentId}`,
-            error: (error as Error).message
+            error: (error as Error).message,
+            duration: duration
         });
 
         return {
@@ -177,6 +169,7 @@ export const transferAmount = async (paymentId: bigint) => {
 }
 
 export const depositPayment = async (paymentId: bigint) => {
+    const startTime = Date.now();
     const client = await pool.connect();
     try {
         // Transactional operations for deposit processing
@@ -237,9 +230,14 @@ export const depositPayment = async (paymentId: bigint) => {
 
         await client.query("COMMIT");
 
+        const duration = (Date.now() - startTime) / 1000; // duration in seconds
+        paymentsDuration.observe({ payment_type: 'DEPOSIT' }, duration);
+        paymentsAmount.observe({ payment_type: 'DEPOSIT' }, Number(payment.amount));
+
         databaseLogger.info({
             message: `Successfully processed deposit for payment ID: ${paymentId}`,
-            payment_id: paymentId
+            payment_id: paymentId,
+            duration: duration
         });
 
         return {
@@ -249,9 +247,12 @@ export const depositPayment = async (paymentId: bigint) => {
         };
     } catch (error) {
         await client.query("ROLLBACK");
+        const duration = (Date.now() - startTime) / 1000; // duration in seconds
+        paymentsDuration.observe({ payment_type: 'DEPOSIT' }, duration);
         databaseLogger.error({
             message: `Error processing deposit with ID: ${paymentId}`,
-            error: (error as Error).message
+            error: (error as Error).message,
+            duration: duration
         });
         return {
             success: false,

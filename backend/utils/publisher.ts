@@ -1,11 +1,12 @@
 // get unpublished payments from the outbox table and publish them to the payment queue
-
 import { pool } from "../messaging/db";
 import { publishToQueue } from "../messaging/paymentQueue";
 import { getUnpublishedOutboxEntriesQuery, incrementAttemptCountQuery, updateOutboxEntryAsPublishedQuery } from "../query/outboxQueries";
 import { publisherLogger } from "./logger";
+import { outboxFailed, outboxPublished } from "./metrics";
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 
 export const getUnpublishedEvents = async () => {
     const query = getUnpublishedOutboxEntriesQuery();
@@ -42,10 +43,14 @@ export const fetchAndPublishPayments = async () => {
                         payment_id: event.payload.payment_id
                     });
 
+                    outboxPublished.inc({ event_type: event.event_type });
+
                 } catch (error) {
 
                     const incrementQuery = incrementAttemptCountQuery(event.event_id);
                     await pool.query(incrementQuery);
+
+                    outboxFailed.inc({ event_type: event.event_type });
 
                     publisherLogger.error({
                         message: `Error publishing payment with event_id: ${event.event_id} to RabbitMQ. Incremented attempt count.`,
@@ -55,6 +60,7 @@ export const fetchAndPublishPayments = async () => {
                 }
             }
         } catch (error) {
+            outboxFailed.inc({ event_type: 'FETCH_UNPUBLISHED_EVENTS' });
             publisherLogger.error({
                 message: 'Error fetching unpublished events from the outbox table',
                 error: (error as Error).message

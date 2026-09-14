@@ -1,16 +1,21 @@
-import fastify from "../app";
+
 import { createPayment, getPaymentDetails } from "../controllers/payment";
 import { paymentSchema } from "../schemas/bodySchemas";
+import type {FastifyInstance} from "fastify";
 
-// create payment
-fastify.post(
-    '/payments',
-    { schema: paymentSchema },
-    createPayment
-);
+export default async function paymentRoutes(
+    fastify: FastifyInstance,
+) {
+    // create payment
+    fastify.post(
+        '/payments',
+        { schema: paymentSchema },
+        createPayment
+    );
 
-// view a single payment record
-fastify.get(
-    '/payments/:payment_id', 
-    getPaymentDetails
-);
+    // view a single payment record
+    fastify.get(
+        '/payments/:payment_id',
+        getPaymentDetails
+    );
+}

@@ -2,23 +2,45 @@
 import amqp from 'amqplib';
 import { handlePayment } from "../utils/handlePayments";
 import { workerLogger } from '../utils/logger';
+import { paymentsDeadLettered, paymentsInProgress, paymentsRetried, paymentsSuccessful } from '../utils/metrics';
+import { buildFastify } from '../app';
+import client from 'prom-client';
 
 const MAX_RETRIES = 3;
 
-const connection = await amqp.connect(
-    process.env.RABBITMQ_URL ?? 'amqp://localhost:5672'
-).then(conn => {
+let connection;
+try {
+    connection = await amqp.connect(process.env.RABBITMQ_URL ?? 'amqp://localhost:5672');
     workerLogger.info({
-        message: 'Connected to RabbitMQ for worker',
+        message: 'Connected to RabbitMQ successfully'
     });
-    return conn;
-}).catch(err => {
+} catch (error) {
     workerLogger.error({
-        message: 'Failed to connect to RabbitMQ for worker',
-        error: (err as Error).message
+        message: 'Failed to connect to RabbitMQ',
+        error: (error as Error).message
     });
     process.exit(1);
+}
+
+const workerServer = buildFastify();
+const register = client.register;
+
+workerServer.get('/health', async (request, reply) => {
+    reply.status(200).send({
+        success: true,
+        message: 'Worker is healthy'
+    });
 })
+
+workerServer.get('/metrics', async (request, reply) => {
+    reply.header('Content-Type', register.contentType);
+    return register.metrics();
+})
+
+await workerServer.listen({
+    port: Number(process.env.WORKER_PORT ?? 5000),
+    host: '0.0.0.0'
+});
 
 const queue = 'payment_queue';
 const baseTTL = 2000; // Base TTL for retry queues in milliseconds
@@ -45,10 +67,6 @@ for (const q of retryQueues) {
 // set up deadletter queue for messages that exceed max retries
 await channel.assertQueue("payment_dlq", {
     durable: true,
-    arguments: {
-        "x-dead-letter-exchange": "",
-        "x-dead-letter-routing-key": queue
-    }
 });
 
 channel.consume(queue, async (msg) => {
@@ -61,22 +79,17 @@ channel.consume(queue, async (msg) => {
 
         const paymentData = JSON.parse(msg.content.toString());
         const paymentId = paymentData.payment_id;
+        const paymentType = paymentData.payment_type;
+
+        paymentsInProgress.inc({ payment_type: paymentType });
 
         const attemptCount = Number(msg.properties.headers?.['x-attempts'] ?? 0);
 
         try {
-            const result = await handlePayment(paymentId);
+            const result = await handlePayment(paymentId, paymentType);
 
             // Acknowledge the message after processing
             if (!result.success) {
-                if (!result.retryable) {
-                    workerLogger.error({
-                        message: `Non-retryable error processing payment with paymentId: ${paymentId}. Sending to deadletter queue.`,
-                        error: result.message
-                    });
-                    channel.ack(msg);
-                    return;
-                }
                 throw new Error(`Failed to process payment: ${result.message}`);
             }
 
@@ -86,6 +99,7 @@ channel.consume(queue, async (msg) => {
 
             channel.ack(msg);
 
+            paymentsSuccessful.inc({ payment_type: paymentData.payment_type });
         } catch (error) {
 
             if (attemptCount < MAX_RETRIES) {
@@ -98,13 +112,6 @@ channel.consume(queue, async (msg) => {
                     retryQueue = retryQueues[2];
                 }
 
-                workerLogger.warn({
-                    message: `Error processing payment with paymentId: ${paymentId}. Retrying in ${baseTTL * Math.pow(2, attemptCount)} ms.`,
-                    error: (error as Error).message,
-                    attemptCount: attemptCount + 1,
-                    retryQueue: retryQueue
-                });
-
                 const delays = [
                     baseTTL, // 2 seconds for first retry
                     baseTTL * 2, // 4 seconds for second retry
@@ -112,6 +119,15 @@ channel.consume(queue, async (msg) => {
                 ]
                 const jitter = Math.floor(Math.random() * 1000);
                 const delay = delays[attemptCount] + jitter;
+
+                workerLogger.warn({
+                    message: `Error processing payment. Retrying.`,
+                    paymentId: paymentId,
+                    retryQueue: retryQueue,
+                    delay: delay,
+                    error: (error as Error).message,
+                    attemptCount: attemptCount + 1
+                });
 
                 channel.sendToQueue(
                     retryQueue,
@@ -126,6 +142,8 @@ channel.consume(queue, async (msg) => {
                 );
                 await channel.waitForConfirms();
                 channel.ack(msg);
+
+                paymentsRetried.inc({ payment_type: paymentData.payment_type });
             } else {
                 workerLogger.error({
                     message: `Max retries reached for payment with paymentId: ${paymentId}. Sending to deadletter queue.`,
@@ -137,15 +155,15 @@ channel.consume(queue, async (msg) => {
                     msg.content,
                     {
                         persistent: true,
-                        headers: {
-                            'x-attempts': attemptCount + 1
-                        },
                     }
                 );
                 await channel.waitForConfirms();
-                
+
                 channel.ack(msg); // Acknowledge to remove from queue
+                paymentsDeadLettered.inc({ payment_type: paymentData.payment_type });
             }
+        } finally {
+            paymentsInProgress.dec({ payment_type: paymentType });
         }
     }
 }, { noAck: false });
