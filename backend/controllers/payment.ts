@@ -9,7 +9,6 @@ import { paymentsCreated, paymentsFailed } from "../utils/metrics";
 const createPayment = async (
     request: FastifyRequest<{
         Body: {
-            sender_id: string;
             receiver_id: string;
             amount: number;
             currency: string;
@@ -19,7 +18,9 @@ const createPayment = async (
     reply: FastifyReply
 ) => {
 
-    const { sender_id, receiver_id, amount, currency, notes } = request.body;
+    const sender_id = request.user.sub; // Get the sender_id from the authenticated user's JWT payload
+
+    const { receiver_id, amount, currency, notes } = request.body;
     const { idempotency_key } = request.headers as { idempotency_key: string };
     const payment_type = "TRANSFER"; // Set payment type as 'transfer'
 

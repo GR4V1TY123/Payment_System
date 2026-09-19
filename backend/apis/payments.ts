@@ -1,20 +1,34 @@
 
 import { createPayment, getPaymentDetails } from "../controllers/payment";
 import { paymentSchema } from "../schemas/bodySchemas";
-import type {FastifyInstance} from "fastify";
+import type { FastifyInstance } from "fastify";
 
 export default async function paymentRoutes(
     fastify: FastifyInstance,
 ) {
     // create payment
-    fastify.post(
+    fastify.post<{
+        Body: {
+            receiver_id: string;
+            amount: number;
+            currency: string;
+            notes?: string;
+        };
+    }>(
         '/payments',
-        { schema: paymentSchema },
+        {
+            onRequest: [fastify.authenticateToken],
+            schema: paymentSchema
+        },
         createPayment
     );
 
     // view a single payment record
-    fastify.get(
+    fastify.get<{
+        Params: {
+            payment_id: string;
+        };
+    }>(
         '/payments/:payment_id',
         getPaymentDetails
     );

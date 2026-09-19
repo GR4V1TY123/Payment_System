@@ -5,6 +5,7 @@ import { createPaymentQuery } from "../query/paymentQueries";
 import { pool } from "../messaging/db";
 import { createOutboxEntryQuery } from "../query/outboxQueries";
 import { apiLogger } from "../utils/logger";
+import * as argon2 from "argon2";
 
 const createAccount = async (
     request: FastifyRequest<{
@@ -12,31 +13,46 @@ const createAccount = async (
             name: string;
             email: string;
             currency?: string;
+            password: string;
         };
     }>,
     reply: FastifyReply
 ) => {
-    const { name, email, currency } = request.body;
+    const { name, email, password, currency } = request.body;
 
     apiLogger.info({
         message: `Received request to create account for ${name} with email ${email}`,
-        body: request.body,
     });
 
     try {
-        const query = createAccountQuery(name, email, currency);
+        const expirationTime = process.env.JWT_EXPIRATION_TIME || '1h';
 
+        const password_hash = await argon2.hash(password);
+
+        const query = createAccountQuery(name, email, currency, password_hash);
         const result = await runQuery(query);
+
+        const account = result.rows[0];
+
+        const token = await reply.jwtSign({
+            sub: account.account_id.toString(),
+            name: account.name,
+            email: account.email,
+        }, { expiresIn: expirationTime });
 
         apiLogger.info({
             message: `Successfully created account for ${name} with email ${email}`,
             rowCount: result.rowCount,
         });
 
-        reply.status(200).send({
+        reply.setCookie('access_token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            path: '/',
+        }).status(201).send({
             success: true,
-            rowCount: result.rowCount,
-            rows: result.rows,
+            account: account,
             message: 'Account created successfully'
         });
 
@@ -61,6 +77,19 @@ const getAccountInfo = async (
     }>, reply: FastifyReply
 ) => {
     const { account_id } = request.params as { account_id: string };
+    const userId = request.user.sub
+
+    if (!userId || userId !== account_id) {
+        apiLogger.warn({
+            message: `Unauthorized account info request for account_id: ${account_id} by user_id: ${userId}`,
+            params: request.params,
+            headers: request.headers
+        });
+        return reply.status(403).send({
+            success: false,
+            message: 'You are not authorized to view this account\'s details'
+        });
+    }
 
     apiLogger.info({
         message: `Received request to get account info for account_id: ${account_id}`,
@@ -103,6 +132,19 @@ const getTransactionHistory = async (
     reply: FastifyReply
 ) => {
     const { account_id } = request.params as { account_id: string };
+    const userId = request.user.sub
+
+    if (!userId || userId !== account_id) {
+        apiLogger.warn({
+            message: `Unauthorized transaction history request for account_id: ${account_id} by user_id: ${userId}`,
+            params: request.params,
+            headers: request.headers
+        });
+        return reply.status(403).send({
+            success: false,
+            message: 'You are not authorized to view this account\'s transaction history'
+        });
+    }
 
     apiLogger.info({
         message: `Received request to get transaction history for account_id: ${account_id}`,
@@ -145,6 +187,19 @@ const getPaymentHistory = async (
     reply: FastifyReply
 ) => {
     const { account_id } = request.params as { account_id: string };
+    const userId = request.user.sub
+
+    if (!userId || userId !== account_id) {
+        apiLogger.warn({
+            message: `Unauthorized attempt to access payment history for account_id: ${account_id} by user_id: ${userId}`,
+            params: request.params,
+            headers: request.headers
+        });
+        return reply.status(403).send({
+            success: false,
+            message: 'You are not authorized to view payment history for this account'
+        });
+    }
 
     apiLogger.info({
         message: `Received request to get payment history for account_id: ${account_id}`,
@@ -196,6 +251,20 @@ const depositPayment = async (
     const { idempotency_key } = request.headers as { idempotency_key: string };
     const payment_type = 'DEPOSIT'; // Set payment type as 'deposit'
 
+    const userId = request.user.sub
+
+    if (!userId || userId !== account_id) {
+        apiLogger.warn({
+            message: `Unauthorized deposit attempt to account_id: ${account_id} by user_id: ${userId}`,
+            params: request.params,
+            headers: request.headers
+        });
+        return reply.status(403).send({
+            success: false,
+            message: 'You are not authorized to deposit to this account'
+        });
+    }
+
     apiLogger.info({
         message: `Received request to deposit payment to account_id: ${account_id} of amount ${amount} ${currency}`,
         params: request.params,
@@ -213,7 +282,8 @@ const depositPayment = async (
         const payment = result.rows[0];
         const { payment_id } = payment;
         const payload = {
-            payment_id: payment_id.toString()
+            payment_id: payment_id.toString(),
+            payment_type: payment_type,
         }
 
         // make outbox record in outbox table
@@ -250,10 +320,99 @@ const depositPayment = async (
     }
 }
 
+const logout = async (request: FastifyRequest, reply: FastifyReply) => {
+    apiLogger.info({
+        message: `Received request to logout user with account_id: ${request.user.sub}`,
+    });
+    reply.clearCookie('access_token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/',
+    }).status(200).send({
+        success: true,
+        message: 'Logged out successfully'
+    });
+}
+
+const login = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { email, password } = request.body as { email: string; password: string };
+
+    apiLogger.info({
+        message: `Received login request for email: ${email}`,
+    });
+
+    try {
+        const query = `SELECT account_id, name, email, password_hash FROM accounts WHERE email = $1`;
+        const result = await runQuery({ text: query, values: [email] });
+
+        if (result.rowCount === 0) {
+            apiLogger.warn({
+                message: `Login failed for email: ${email} - account not found`,
+            });
+            return reply.status(401).send({
+                success: false,
+                message: 'Invalid email or password'
+            });
+        }
+
+        const account = result.rows[0];
+        const isPasswordValid = await argon2.verify(account.password_hash, password);
+
+        if (!isPasswordValid) {
+            apiLogger.warn({
+                message: `Login failed for email: ${email} - invalid password`,
+            });
+            return reply.status(401).send({
+                success: false,
+                message: 'Invalid email or password'
+            });
+        }
+
+        const expirationTime = process.env.JWT_EXPIRATION_TIME || '1h';
+        const token = await reply.jwtSign({
+            sub: account.account_id.toString(),
+            name: account.name,
+            email: account.email,
+        }, { expiresIn: expirationTime });
+
+        apiLogger.info({
+            message: `Login successful for email: ${email}`,
+        });
+
+        reply.setCookie('access_token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            path: '/',
+        }).status(200).send({
+            success: true,
+            message: 'Login successful',
+            account: {
+                account_id: account.account_id,
+                name: account.name,
+                email: account.email
+            }
+        });
+    } catch (error) {
+        apiLogger.error({
+            message: `Error during login for email: ${email}`,
+            error: (error as Error).message
+        });
+        reply.status(500).send({
+            success: false,
+            message: 'Error during login',
+            error: (error as Error).message
+        });
+    }
+}
+
 export {
     createAccount,
     getAccountInfo,
     getTransactionHistory,
     depositPayment,
-    getPaymentHistory
+    getPaymentHistory,
+    logout,
+    login
 };

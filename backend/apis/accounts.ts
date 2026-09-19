@@ -1,6 +1,6 @@
-import { createAccount, depositPayment, getAccountInfo, getPaymentHistory, getTransactionHistory } from "../controllers/account";
+import { createAccount, depositPayment, getAccountInfo, getPaymentHistory, getTransactionHistory, login, logout } from "../controllers/account";
 import { accountSchema, paymentSchema } from "../schemas/bodySchemas";
-import type {FastifyInstance} from "fastify";
+import type { FastifyInstance } from "fastify";
 
 export default async function accountRoutes(
     fastify: FastifyInstance,
@@ -8,32 +8,94 @@ export default async function accountRoutes(
     // create account
     fastify.post(
         '/accounts',
-        { schema: accountSchema },
+        {
+            schema: accountSchema
+        },
         createAccount
     );
 
     // deposit payment
-    fastify.post(
+    fastify.post<{
+        Params: {
+            account_id: string;
+        };
+        Body: {
+            amount: number;
+            currency: string;
+            notes?: string;
+        };
+    }>(
         '/accounts/:account_id/deposit',
-        { schema: paymentSchema },
+        { 
+            onRequest: [fastify.authenticateToken],
+            schema: paymentSchema
+        },
         depositPayment
     );
 
     // view account details
-    fastify.get(
+    fastify.get<{
+        Params: {
+            account_id: string;
+        };
+    }>(
         '/accounts/:account_id',
+        {
+            onRequest: [fastify.authenticateToken],
+        },
         getAccountInfo
     );
 
     // view transaction history for a account
-    fastify.get(
+    fastify.get<{
+        Params: {
+            account_id: string;
+        };
+    }>(
         '/accounts/:account_id/ledger',
+        {
+            onRequest: [fastify.authenticateToken],
+        },
         getTransactionHistory
     );
 
     // get payment history for a account
-    fastify.get(
+    fastify.get<{
+        Params: {
+            account_id: string;
+        };
+    }>(
         '/accounts/:account_id/payments',
+        {
+            onRequest: [fastify.authenticateToken],
+        },
         getPaymentHistory
+    );
+
+    // logout account
+    fastify.post(
+        '/accounts/logout',
+        {
+            onRequest: [fastify.authenticateToken],
+        },
+        logout
+    );
+
+    // login account
+    fastify.post(
+        '/accounts/login',
+        {
+            schema: {
+                body: {
+                    type: 'object',
+                    required: ['email', 'password'],
+                    properties: {
+                        email: { type: 'string', format: 'email' },
+                        password: { type: 'string', minLength: 6 }
+                    }
+                }
+            }
+        },
+        login
     );
 }

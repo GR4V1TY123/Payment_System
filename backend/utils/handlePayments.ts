@@ -180,6 +180,8 @@ export const depositPayment = async (paymentId: bigint) => {
         const paymentResult = await client.query(query);
         const payment = paymentResult.rows[0];
 
+        console.log("Payment details:", payment);
+
         if (!payment) {
             await client.query("ROLLBACK");
             return {
