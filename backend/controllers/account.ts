@@ -407,6 +407,21 @@ const login = async (request: FastifyRequest, reply: FastifyReply) => {
     }
 }
 
+const getAccountEvents = async (request: FastifyRequest, reply: FastifyReply) => {
+    const userId = request.user.sub;
+
+    reply.raw.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+    });
+
+    reply.raw.write(
+        `event: connected\n` +
+        `data: ${JSON.stringify({ userId })}\n\n`
+    );
+}
+
 export {
     createAccount,
     getAccountInfo,
@@ -414,5 +429,6 @@ export {
     depositPayment,
     getPaymentHistory,
     logout,
-    login
+    login,
+    getAccountEvents
 };

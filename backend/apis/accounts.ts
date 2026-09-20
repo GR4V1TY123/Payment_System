@@ -1,4 +1,4 @@
-import { createAccount, depositPayment, getAccountInfo, getPaymentHistory, getTransactionHistory, login, logout } from "../controllers/account";
+import { createAccount, depositPayment, getAccountEvents, getAccountInfo, getPaymentHistory, getTransactionHistory, login, logout } from "../controllers/account";
 import { accountSchema, paymentSchema } from "../schemas/bodySchemas";
 import type { FastifyInstance } from "fastify";
 
@@ -97,5 +97,14 @@ export default async function accountRoutes(
             }
         },
         login
+    );
+
+    // Get server side events for payment updates
+    fastify.get(
+        '/accounts/events',
+        {
+            onRequest: [fastify.authenticateToken],
+        },
+        getAccountEvents
     );
 }

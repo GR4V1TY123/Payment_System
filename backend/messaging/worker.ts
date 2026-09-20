@@ -2,7 +2,7 @@
 import amqp from 'amqplib';
 import { handlePayment } from "../utils/handlePayments";
 import { workerLogger } from '../utils/logger';
-import { paymentsDeadLettered, paymentsInProgress, paymentsRetried, paymentsSuccessful } from '../utils/metrics';
+import { paymentsDeadLettered, paymentsFailed, paymentsInProgress, paymentsRetried, paymentsSuccessful } from '../utils/metrics';
 import { buildFastify } from '../app';
 import client from 'prom-client';
 
@@ -90,7 +90,16 @@ channel.consume(queue, async (msg) => {
 
             // Acknowledge the message after processing
             if (!result.success) {
-                throw new Error(`Failed to process payment: ${result.message}`);
+                if(result.retryable) {
+                    throw new Error(`Retryable error processing payment: ${result.message}`);
+                } else {
+                    workerLogger.error({
+                        message: `Non-retryable error processing payment with paymentId: ${paymentId}`,
+                        error: result.message
+                    });
+                    paymentsFailed.inc({ payment_type: paymentData.payment_type });
+                    return;
+                }
             }
 
             workerLogger.info({
@@ -161,6 +170,7 @@ channel.consume(queue, async (msg) => {
 
                 channel.ack(msg); // Acknowledge to remove from queue
                 paymentsDeadLettered.inc({ payment_type: paymentData.payment_type });
+                paymentsFailed.inc({ payment_type: paymentData.payment_type });
             }
         } finally {
             paymentsInProgress.dec({ payment_type: paymentType });

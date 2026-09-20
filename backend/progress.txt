@@ -25,3 +25,10 @@ Added retry mechanism with exponential backoff + jitter, why ?
 retry queues with expirations 2s,4s,8s, so if a message fails repeatedely they go through these queues, if failing even after this, they are dropped for now(can use dlq)
 also added a jitter to every retry_queue so the load on worker is decreased by not getting many msgs at a same time
 now the fresh payments are processed somewhat faster and failed messages go throught the retries
+
+
+20th SEPT
+THE PAYMENT SYSTEM AND THE WHOLE PROCESS SEEMS TO BE WORKING FINE AT THIS POINT
+TIME TO ADD NOTIFICATION SUPPORT, frontend thinking of using fcm by refering to the implementation done in internship
+
+

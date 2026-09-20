@@ -10,6 +10,13 @@ const register = client.register;
 
 const port = Number(process.env.API_PORT ?? 3000);
 
+apiServer.register(import('@fastify/cors'), {
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+});
+
 apiServer.register(import('@fastify/jwt'), {
   secret: process.env.JWT_SECRET_KEY || 'mandar_secret_key',
   cookie: {
@@ -25,7 +32,7 @@ apiServer.decorate("authenticateToken", authenticateToken);
 apiServer.register(paymentRoutes);
 apiServer.register(accountRoutes);
 
-apiServer.get('/health', async (request, reply) => {
+apiServer.get('/api/health', async (request, reply) => {
   reply.status(200).send({
     success: true,
     message: 'Server is healthy'
