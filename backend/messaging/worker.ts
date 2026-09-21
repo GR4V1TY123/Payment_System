@@ -5,6 +5,9 @@ import { workerLogger } from '../utils/logger';
 import { paymentsDeadLettered, paymentsFailed, paymentsInProgress, paymentsRetried, paymentsSuccessful } from '../utils/metrics';
 import { buildFastify } from '../app';
 import client from 'prom-client';
+import { pool } from './db';
+import { getPaymentByIdQuery } from '../query/paymentQueries';
+import { redisPublish } from '../utils/redisPublisher';
 
 const MAX_RETRIES = 3;
 
@@ -86,11 +89,16 @@ channel.consume(queue, async (msg) => {
         const attemptCount = Number(msg.properties.headers?.['x-attempts'] ?? 0);
 
         try {
+            const payment = (await pool.query(getPaymentByIdQuery(BigInt(paymentId)))).rows[0];
+            if (!payment) {
+                throw new Error(`Payment not found for payment ID: ${paymentId}`);
+            }
+
             const result = await handlePayment(paymentId, paymentType);
 
             // Acknowledge the message after processing
             if (!result.success) {
-                if(result.retryable) {
+                if (result.retryable) {
                     throw new Error(`Retryable error processing payment: ${result.message}`);
                 } else {
                     workerLogger.error({
@@ -98,6 +106,17 @@ channel.consume(queue, async (msg) => {
                         error: result.message
                     });
                     paymentsFailed.inc({ payment_type: paymentData.payment_type });
+                    await redisPublish("payment.updated", {
+                        payment_id: paymentId,
+                        status: 'failed',
+                        error: result.message,
+                        amount: payment?.amount,
+                        currency: payment?.currency,
+                        notes: payment?.notes,
+                        account_id: payment?.sender_id?.toString(),
+                        payment_type: paymentType
+                    });
+                    channel.ack(msg);
                     return;
                 }
             }
@@ -109,6 +128,54 @@ channel.consume(queue, async (msg) => {
             channel.ack(msg);
 
             paymentsSuccessful.inc({ payment_type: paymentData.payment_type });
+
+            if (paymentType === 'TRANSFER') {
+                // notify sender and receiver about the payment status
+                const senderId = payment.sender_id.toString();
+                const receiverId = payment.receiver_id.toString();
+
+                const channel = "payment.updated"
+
+                const message = {
+                    payment_id: paymentId,
+                    status: 'completed',
+                    amount: payment.amount,
+                    currency: payment.currency,
+                    notes: payment.notes,
+                    payment_type: paymentType
+                }
+
+                await redisPublish(channel, {
+                    ...message,
+                    account_id: senderId
+                });
+
+                await redisPublish(channel, {
+                    ...message,
+                    account_id: receiverId
+                });
+
+            } else if (paymentType === 'DEPOSIT') {
+                // notify sender about the payment status
+                const senderId = payment.receiver_id.toString(); // for deposit, the receiver is the account that made the deposit
+                const channel = "payment.updated"
+
+                const message = {
+                    payment_id: paymentId,
+                    status: 'completed',
+                    amount: payment.amount,
+                    currency: payment.currency,
+                    notes: payment.notes,
+                    payment_type: paymentType
+                }
+
+                await redisPublish(channel, {
+                    ...message,
+                    account_id: senderId
+                });
+            }
+
+
         } catch (error) {
 
             if (attemptCount < MAX_RETRIES) {

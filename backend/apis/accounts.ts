@@ -14,6 +14,42 @@ export default async function accountRoutes(
         createAccount
     );
 
+     // logout account
+    fastify.post(
+        '/accounts/logout',
+        {
+            onRequest: [fastify.authenticateToken],
+        },
+        logout
+    );
+
+    // login account
+    fastify.post(
+        '/accounts/login',
+        {
+            schema: {
+                body: {
+                    type: 'object',
+                    required: ['email', 'password'],
+                    properties: {
+                        email: { type: 'string', format: 'email' },
+                        password: { type: 'string', minLength: 6 }
+                    }
+                }
+            }
+        },
+        login
+    );
+
+    // Get server side events for payment updates
+    fastify.get(
+        '/accounts/events',
+        {
+            onRequest: [fastify.authenticateToken],
+        },
+        getAccountEvents
+    );
+
     // deposit payment
     fastify.post<{
         Params: {
@@ -70,41 +106,5 @@ export default async function accountRoutes(
             onRequest: [fastify.authenticateToken],
         },
         getPaymentHistory
-    );
-
-    // logout account
-    fastify.post(
-        '/accounts/logout',
-        {
-            onRequest: [fastify.authenticateToken],
-        },
-        logout
-    );
-
-    // login account
-    fastify.post(
-        '/accounts/login',
-        {
-            schema: {
-                body: {
-                    type: 'object',
-                    required: ['email', 'password'],
-                    properties: {
-                        email: { type: 'string', format: 'email' },
-                        password: { type: 'string', minLength: 6 }
-                    }
-                }
-            }
-        },
-        login
-    );
-
-    // Get server side events for payment updates
-    fastify.get(
-        '/accounts/events',
-        {
-            onRequest: [fastify.authenticateToken],
-        },
-        getAccountEvents
     );
 }

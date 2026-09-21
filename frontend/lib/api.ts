@@ -85,3 +85,25 @@ export const readSession = () => {
     return saved ? (JSON.parse(saved) as Account) : null;
 };
 export const clearSession = () => window.localStorage.removeItem("pocketpay_account");
+
+export const getEvents = (
+    onPaymentUpdate: (event: MessageEvent) => void,
+    onError?: (event: Event) => void,
+    onConnected?: (event: MessageEvent) => void,
+) => {
+    const eventSource = new EventSource("http://localhost:3000/accounts/events", {
+        withCredentials: true,
+    });
+
+    eventSource.addEventListener("payment.updated", onPaymentUpdate);
+
+    if (onConnected) {
+        eventSource.addEventListener("connected", onConnected);
+    }
+
+    if (onError) {
+        eventSource.onerror = onError;
+    }
+
+    return eventSource;
+};

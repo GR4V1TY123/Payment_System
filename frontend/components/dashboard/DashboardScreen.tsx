@@ -8,6 +8,7 @@ import {
     clearSession,
     deposit,
     getAccount,
+    getEvents,
     getPaymentHistory,
     logout,
     Payment,
@@ -25,10 +26,10 @@ const money = (value: number | string | undefined, currency = "INR") =>
 const dateOf = (value?: string) =>
     value
         ? new Date(value).toLocaleDateString("en-IN", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-          })
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+        })
         : "Pending";
 
 export function DashboardScreen() {
@@ -65,6 +66,57 @@ export function DashboardScreen() {
                 .finally(() => setLoading(false));
         })();
     }, [router]);
+
+    useEffect(() => {
+        if (!account) return;
+
+        const events = getEvents(
+            (event) => {
+                try {
+                    const update = JSON.parse(event.data) as Payment;
+
+                    console.log("Payment update:", update);
+
+                    setPayments((currentPayments) => {
+                        const paymentIndex = currentPayments.findIndex(
+                            (payment) => String(payment.payment_id) === String(update.payment_id),
+                        );
+
+                        if (paymentIndex === -1) return currentPayments;
+
+                        const nextPayments = [...currentPayments];
+                        nextPayments[paymentIndex] = {
+                            ...nextPayments[paymentIndex],
+                            ...update,
+                        };
+                        return nextPayments;
+                    });
+
+                    setNotice(`Payment ${update.status || "updated"}.`);
+                    void refresh(account).catch(() => {
+                        console.error("Failed to refresh after payment update");
+                    });
+                } catch {
+                    console.error("SSE payment event was not valid JSON:", event.data);
+                }
+            },
+            (error) => {
+                console.error("SSE error:", error);
+            },
+            (event) => {
+                console.log("SSE connected:", event.data);
+            },
+        );
+
+        events.onopen = () => {
+            console.log("SSE connection opened");
+        };
+
+        return () => {
+            events.close();
+            console.log("SSE connection closed");
+        };
+    }, [account?.account_id]);
 
     const handlePayment = async (event: FormEvent<HTMLFormElement>, type: "send" | "add") => {
         event.preventDefault();
@@ -273,8 +325,8 @@ export function DashboardScreen() {
                                             {payment.payment_type === "DEPOSIT"
                                                 ? "Added money"
                                                 : incoming
-                                                  ? "Money received"
-                                                  : `To account ${payment.receiver_id}`}
+                                                    ? "Money received"
+                                                    : `To account ${payment.receiver_id}`}
                                         </strong>
                                         <small>
                                             {dateOf(payment.created_at)}

@@ -6,6 +6,7 @@ import { pool } from "../messaging/db";
 import { createOutboxEntryQuery } from "../query/outboxQueries";
 import { apiLogger } from "../utils/logger";
 import * as argon2 from "argon2";
+import { addClient } from "../utils/sse";
 
 const createAccount = async (
     request: FastifyRequest<{
@@ -409,17 +410,23 @@ const login = async (request: FastifyRequest, reply: FastifyReply) => {
 
 const getAccountEvents = async (request: FastifyRequest, reply: FastifyReply) => {
     const userId = request.user.sub;
+    const origin = request.headers.origin;
 
+    reply.hijack();
     reply.raw.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Credentials': 'true',
     });
 
     reply.raw.write(
         `event: connected\n` +
         `data: ${JSON.stringify({ userId })}\n\n`
     );
+
+    addClient(userId, reply);
 }
 
 export {
