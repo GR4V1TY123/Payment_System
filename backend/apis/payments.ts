@@ -18,7 +18,13 @@ export default async function paymentRoutes(
         '/payments',
         {
             onRequest: [fastify.authenticateToken],
-            schema: paymentSchema
+            schema: paymentSchema,
+            config: {
+                rateLimit: {
+                    max: 30, // maximum number of requests
+                    timeWindow: '1 minute', // time window for the rate limit
+                }
+            }
         },
         createPayment
     );

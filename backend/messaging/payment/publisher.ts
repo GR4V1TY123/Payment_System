@@ -1,9 +1,9 @@
 // get unpublished payments from the outbox table and publish them to the payment queue
-import { pool } from "../messaging/db";
-import { publishToQueue } from "../messaging/paymentQueue";
-import { getUnpublishedOutboxEntriesQuery, incrementAttemptCountQuery, updateOutboxEntryAsPublishedQuery } from "../query/outboxQueries";
-import { publisherLogger } from "./logger";
-import { outboxFailed, outboxPublished } from "./metrics";
+import { pool } from "../db";
+import { publishToQueue } from "./sendToQueue";
+import { getUnpublishedOutboxEntriesQuery, incrementAttemptCountQuery, updateOutboxEntryAsPublishedQuery } from "../../query/outboxQueries";
+import { publisherLogger } from "../../utils/logger";
+import { outboxFailed, outboxPublished } from "../../utils/metrics";
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 

@@ -9,7 +9,13 @@ export default async function accountRoutes(
     fastify.post(
         '/accounts',
         {
-            schema: accountSchema
+            schema: accountSchema,
+            config: {
+                rateLimit: {
+                    max: 5, // maximum number of requests
+                    timeWindow: '1 minute', // time window for the rate limit
+                }
+            }
         },
         createAccount
     );
@@ -35,6 +41,12 @@ export default async function accountRoutes(
                         email: { type: 'string', format: 'email' },
                         password: { type: 'string', minLength: 6 }
                     }
+                }
+            },
+            config: {
+                rateLimit: {
+                    max: 5, // maximum number of requests
+                    timeWindow: '1 minute', // time window for the rate limit
                 }
             }
         },
@@ -64,7 +76,13 @@ export default async function accountRoutes(
         '/accounts/:account_id/deposit',
         { 
             onRequest: [fastify.authenticateToken],
-            schema: paymentSchema
+            schema: paymentSchema,
+            config: {
+                rateLimit: {
+                    max: 30, // maximum number of requests
+                    timeWindow: '1 minute', // time window for the rate limit
+                }
+            }
         },
         depositPayment
     );
@@ -78,6 +96,12 @@ export default async function accountRoutes(
         '/accounts/:account_id',
         {
             onRequest: [fastify.authenticateToken],
+            config: {
+                rateLimit: {
+                    max: 60, // maximum number of requests
+                    timeWindow: '1 minute', // time window for the rate limit
+                }
+            }
         },
         getAccountInfo
     );
@@ -91,6 +115,12 @@ export default async function accountRoutes(
         '/accounts/:account_id/ledger',
         {
             onRequest: [fastify.authenticateToken],
+            config: {
+                rateLimit: {
+                    max: 60, // maximum number of requests
+                    timeWindow: '1 minute', // time window for the rate limit
+                }
+            }
         },
         getTransactionHistory
     );
@@ -104,6 +134,12 @@ export default async function accountRoutes(
         '/accounts/:account_id/payments',
         {
             onRequest: [fastify.authenticateToken],
+            config: {
+                rateLimit: {
+                    max: 60, // maximum number of requests
+                    timeWindow: '1 minute', // time window for the rate limit
+                }
+            }
         },
         getPaymentHistory
     );

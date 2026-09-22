@@ -6,12 +6,12 @@ const RABBITMQ_URL = process.env.RABBITMQ_URL ?? 'amqp://localhost:5672';
 
 let rabbitChannel: ConfirmChannel;
 
-export async function connectRabbitMQ() {
+export async function connectRabbitMQ(queueName: string): Promise<ConfirmChannel> {
     try {
         const connection = await amqp.connect(RABBITMQ_URL);
         rabbitChannel = await connection.createConfirmChannel();
 
-        const queue = 'payment_queue';
+        const queue = queueName;
         await rabbitChannel.assertQueue(queue, { durable: true });
 
         paymentQueueLogger.info({

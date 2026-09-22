@@ -2,6 +2,8 @@
 
 Start building
 
+----------------------------------------------------------------------------------------------------
+
 Add idempotency_key , why ? 
 -> if a request is by chance repeated again then, it will be processed only once by checking this key from database, 
 this can happen if a client tries to make a payment again, very useful when the client(frontend) has retry mechanism for request
@@ -9,16 +11,21 @@ a retry is normally trigerred when theres timeout, connection failure, or loses 
 even if the server successfully processed the payment. but the client may not know what happened internally in server, so if
 the DB has already recorded this payment request, no need to process it again, this avoids duplicate payment
 
+----------------------------------------------------------------------------------------------------
+
 Set noAck to false, why ?
 -> an ack tells the queue to delete that message from the queue once received
 in the providded fnc if noAck is true, means its auto acknowledging, and marks the message as successful, and is lost once the consumer takes it,
 i have set it to noAck false, for manual ack, so if a worker fails, rabbitmq sneds this message to other worker for preocessing (throuhg round robin algo)
+
+----------------------------------------------------------------------------------------------------
 
 Added Outbox Events, why ?
 -> earlier i was doing add to db then push to queue, but what if any of these oprn fail ?, to keep it consistent, created a outbox_events table that stores
 confirmed payments that need to be processed and pushed to the queue, so if a payemnt is in DB it is definitely in the outbox as well (atomic opeartion when inserting payment)
 this outbox also allows to retry queing, by checking the published_at field, which is updated once the payment is pushed to queue
 
+----------------------------------------------------------------------------------------------------
 
 Added retry mechanism with exponential backoff + jitter, why ?
 -> if a message fails and we push it again to the same single payment queue, it adds unnecessary load to the queue, delaying other queue mesasges, so i made 3 
@@ -26,9 +33,26 @@ retry queues with expirations 2s,4s,8s, so if a message fails repeatedely they g
 also added a jitter to every retry_queue so the load on worker is decreased by not getting many msgs at a same time
 now the fresh payments are processed somewhat faster and failed messages go throught the retries
 
+----------------------------------------------------------------------------------------------------
 
 20th SEPT
 THE PAYMENT SYSTEM AND THE WHOLE PROCESS SEEMS TO BE WORKING FINE AT THIS POINT
 TIME TO ADD NOTIFICATION SUPPORT, frontend thinking of using fcm by refering to the implementation done in internship
 
+----------------------------------------------------------------------------------------------------
 
+Added sse events for realtime payment status updation on dashboard,
+it works by using redis pub/sub, because i have different systems (workers here, which is kinda independent of the main api)
+i have a map (account_id -> fastifyreply instance), when a client goes on dashboard i start a keep-alive connection b/w backend frontend, 
+and create an entry in the map, 
+
+when the payment status needs to be updated the worker publishes a message on the channel "payment.updated", the main api is subscribed to it
+this message also has the account_id for the payment, so it searches the above map and sends the event message to that specific client only
+
+----------------------------------------------------------------------------------------------------
+
+added basic IP level rate limiting by fastify rate limiting plugin, can use redis store later if multiple server instances are needed
+
+----------------------------------------------------------------------------------------------------
+
+adding mail service with another separate queue

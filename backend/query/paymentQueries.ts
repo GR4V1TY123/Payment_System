@@ -13,6 +13,13 @@ const getPaymentDetailsQuery = (paymentId: bigint) => {
     };
 }
 
+const getPaymentDetailsWithNamesQuery = (paymentId: bigint) => {
+    return {
+        text: 'SELECT p.*, s.name AS sender_name, r.name AS receiver_name FROM payments p LEFT JOIN accounts s ON p.sender_id = s.account_id LEFT JOIN accounts r ON p.receiver_id = r.account_id WHERE p.payment_id = $1',
+        values: [paymentId],
+    };
+}
+
 const getPaymentByIdQuery = (paymentId: bigint) => {
     return {
         text: 'SELECT * FROM payments WHERE payment_id = $1',
@@ -40,4 +47,5 @@ export {
     getPaymentByIdQuery,
     updatePaymentStatusQuery,
     createLedgerEntryQuery,
+    getPaymentDetailsWithNamesQuery
 }

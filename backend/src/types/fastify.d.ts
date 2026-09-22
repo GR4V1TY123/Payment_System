@@ -5,6 +5,7 @@ import type {
     FastifyRequest,
     FastifyReply
 } from "fastify";
+import { Transporter } from "nodemailer";
 
 declare module "fastify" {
     interface FastifyInstance {
@@ -12,5 +13,6 @@ declare module "fastify" {
             request: FastifyRequest,
             reply: FastifyReply
         ) => Promise<void>;
+        mailer: Transporter;
     }
 }

@@ -1,9 +1,9 @@
-import { pool } from "../messaging/db";
-import { creditAccountBalanceQuery, debitAccountBalanceQuery, getAccountInfoQuery, getAccountInfowithLockQuery } from "../query/accountQueries";
-import { createLedgerEntryQuery, getPaymentByIdQuery, updatePaymentStatusQuery } from "../query/paymentQueries";
-import { databaseLogger } from "./logger";
-import { paymentsAmount, paymentsDuration } from "./metrics";
-import { lockQuery } from "./query";
+import { pool } from "../../messaging/db";
+import { creditAccountBalanceQuery, debitAccountBalanceQuery, getAccountInfoQuery, getAccountInfowithLockQuery } from "../../query/accountQueries";
+import { createLedgerEntryQuery, getPaymentByIdQuery, updatePaymentStatusQuery } from "../../query/paymentQueries";
+import { databaseLogger } from "../../utils/logger";
+import { paymentsAmount, paymentsDuration } from "../../utils/metrics";
+import { lockQuery } from "../../utils/query";
 
 export const handlePayment = async (paymentId: bigint, payment_type: string) => {
     try {

@@ -1,5 +1,5 @@
 // Queue operations for payment processing
-import { getRabbitChannel } from "./rabbitmq";
+import { getRabbitChannel } from "../rabbitmq";
 
 export const publishToQueue = async (paymentData: any) => {
     const channel = getRabbitChannel();

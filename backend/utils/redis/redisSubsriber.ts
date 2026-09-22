@@ -1,5 +1,5 @@
 import Redis from "ioredis";
-import { sendEvent } from "./sse";
+import { sendEvent } from "../sse";
 
 const redisSubscriber = new Redis(
     process.env.REDIS_URL || "redis://localhost:6379"

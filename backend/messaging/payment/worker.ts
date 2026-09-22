@@ -1,13 +1,13 @@
 // worker for processing payments from RabbitMQ queue
 import amqp from 'amqplib';
-import { handlePayment } from "../utils/handlePayments";
-import { workerLogger } from '../utils/logger';
-import { paymentsDeadLettered, paymentsFailed, paymentsInProgress, paymentsRetried, paymentsSuccessful } from '../utils/metrics';
-import { buildFastify } from '../app';
+import { handlePayment } from './handlePayments';
+import { workerLogger } from '../../utils/logger';
+import { paymentsDeadLettered, paymentsFailed, paymentsInProgress, paymentsRetried, paymentsSuccessful } from '../../utils/metrics';
+import { buildFastify } from '../../app';
 import client from 'prom-client';
-import { pool } from './db';
-import { getPaymentByIdQuery } from '../query/paymentQueries';
-import { redisPublish } from '../utils/redisPublisher';
+import { pool } from '../db';
+import { getPaymentByIdQuery } from '../../query/paymentQueries';
+import { redisPublish } from '../../utils/redis/redisPublisher';
 
 const MAX_RETRIES = 3;
 
@@ -31,7 +31,7 @@ const register = client.register;
 workerServer.get('/health', async (request, reply) => {
     reply.status(200).send({
         success: true,
-        message: 'Worker is healthy'
+        message: 'payment worker is healthy'
     });
 })
 
@@ -89,10 +89,20 @@ channel.consume(queue, async (msg) => {
         const attemptCount = Number(msg.properties.headers?.['x-attempts'] ?? 0);
 
         try {
+            
             const payment = (await pool.query(getPaymentByIdQuery(BigInt(paymentId)))).rows[0];
             if (!payment) {
                 throw new Error(`Payment not found for payment ID: ${paymentId}`);
             }
+
+            await redisPublish("payment.updated", {
+                payment_id: paymentId,
+                status: 'processing',
+                amount: payment?.amount,
+                currency: payment?.currency,
+                account_id: payment?.sender_id?.toString(),
+                payment_type: paymentType
+            });
 
             const result = await handlePayment(paymentId, paymentType);
 
@@ -112,7 +122,6 @@ channel.consume(queue, async (msg) => {
                         error: result.message,
                         amount: payment?.amount,
                         currency: payment?.currency,
-                        notes: payment?.notes,
                         account_id: payment?.sender_id?.toString(),
                         payment_type: paymentType
                     });
@@ -141,7 +150,6 @@ channel.consume(queue, async (msg) => {
                     status: 'completed',
                     amount: payment.amount,
                     currency: payment.currency,
-                    notes: payment.notes,
                     payment_type: paymentType
                 }
 
@@ -154,6 +162,8 @@ channel.consume(queue, async (msg) => {
                     ...message,
                     account_id: receiverId
                 });
+
+                // send notification to sender and receiver about the payment status
 
             } else if (paymentType === 'DEPOSIT') {
                 // notify sender about the payment status
@@ -173,6 +183,8 @@ channel.consume(queue, async (msg) => {
                     ...message,
                     account_id: senderId
                 });
+
+                // send notification to sender about the payment status
             }
 
 

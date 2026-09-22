@@ -90,10 +90,15 @@ const databaseLogger = baseLogger.child({
     service: "database",
 });
 
+const mailLogger = baseLogger.child({
+    service: "mail",
+});
+
 export {
     paymentQueueLogger,
     publisherLogger,
     workerLogger,
     apiLogger,
     databaseLogger,
+    mailLogger,
 };
