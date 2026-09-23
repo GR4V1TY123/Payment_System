@@ -1,35 +1,24 @@
-// Connect rabbitmq to the application
-import amqp, { ConfirmChannel } from 'amqplib';
-import { paymentQueueLogger } from '../utils/logger';
+import amqp, { ChannelModel } from 'amqplib';
+import { workerLogger } from '../utils/logger';
 
-const RABBITMQ_URL = process.env.RABBITMQ_URL ?? 'amqp://localhost:5672';
+const RABBITMQ_URL =
+    process.env.RABBITMQ_URL ?? 'amqp://localhost:5672';
 
-let rabbitChannel: ConfirmChannel;
+let connection: ChannelModel;
 
-export async function connectRabbitMQ(queueName: string): Promise<ConfirmChannel> {
-    try {
-        const connection = await amqp.connect(RABBITMQ_URL);
-        rabbitChannel = await connection.createConfirmChannel();
+try {
+    connection = await amqp.connect(RABBITMQ_URL);
 
-        const queue = queueName;
-        await rabbitChannel.assertQueue(queue, { durable: true });
+    workerLogger.info({
+        message: 'Connected to RabbitMQ successfully'
+    });
+} catch (error) {
+    workerLogger.error({
+        message: 'Failed to connect to RabbitMQ',
+        error: (error as Error).message
+    });
 
-        paymentQueueLogger.info({
-            message: 'Connected to RabbitMQ',
-        });
-        return rabbitChannel;
-    } catch (error) {
-        paymentQueueLogger.error({
-            message: 'Failed to connect to RabbitMQ',
-            error: (error as Error).message
-        });
-        throw error;
-    }
+    process.exit(1);
 }
 
-export function getRabbitChannel(): ConfirmChannel {
-    if (!rabbitChannel) {
-        throw new Error('RabbitMQ channel is not initialized. Call connectRabbitMQ() first.');
-    }
-    return rabbitChannel;
-}
+export default connection;

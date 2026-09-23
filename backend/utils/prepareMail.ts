@@ -1,53 +1,92 @@
-export const prepareMail = ({
-    paymentId,
-    amount,
-    currency,
-    senderName,
-    receiverName,
-    status,
-    createdAt,
-}: {
+type MailRole =
+    | "payment_sender"
+    | "payment_receiver"
+    | "payment_depositor";
+
+type PaymentStatus =
+    | "completed"
+    | "pending"
+    | "failed"
+    | "refunded";
+
+type PaymentMailData = {
     paymentId: string;
     amount: number;
     currency: string;
     senderName: string;
     receiverName: string;
-    status: "completed" | "pending" | "failed" | "refunded";
+    status: PaymentStatus;
     createdAt: string;
-}) => {
+    notes?: string;
+};
 
-    const statusMap = {
+export const prepareMail = (
+    mail_role: MailRole,
+    {
+        paymentId,
+        amount,
+        currency,
+        senderName,
+        receiverName,
+        status,
+        createdAt,
+        notes,
+    }: PaymentMailData
+) => {
+
+    /*
+     * STATUS CONFIGURATION
+     */
+
+    const statusMap: Record<
+        PaymentStatus,
+        {
+            title: string;
+            message: string;
+            color: string;
+            bg: string;
+            icon: string;
+        }
+    > = {
         completed: {
             title: "Payment successful",
             message: "Your payment has been completed successfully.",
-            color: "#16a34a",
+            color: "#15803d",
             bg: "#f0fdf4",
             icon: "✓",
         },
+
         pending: {
             title: "Payment pending",
-            message: "Your payment is currently being processed.",
-            color: "#d97706",
+            message: "Your payment is still being processed.",
+            color: "#b45309",
             bg: "#fffbeb",
             icon: "•",
         },
+
         failed: {
             title: "Payment failed",
-            message: "Unfortunately, your payment could not be completed.",
-            color: "#dc2626",
+            message: "Your payment could not be completed.",
+            color: "#b91c1c",
             bg: "#fef2f2",
             icon: "!",
         },
+
         refunded: {
             title: "Payment refunded",
-            message: "The payment has been refunded successfully.",
-            color: "#7c3aed",
+            message: "This payment has been refunded.",
+            color: "#6d28d9",
             bg: "#f5f3ff",
             icon: "↩",
         },
     };
 
     const currentStatus = statusMap[status];
+
+
+    /*
+     * FORMATTING
+     */
 
     const formattedAmount = new Intl.NumberFormat("en-IN", {
         minimumFractionDigits: 2,
@@ -62,24 +101,197 @@ export const prepareMail = ({
         minute: "2-digit",
     });
 
-    return `
+    const formattedNotes = notes?.trim() || "";
+
+    const notesText = formattedNotes
+        ? `Notes: ${formattedNotes}\n`
+        : "";
+
+
+    /*
+     * EMAIL CONTENT VARIABLES
+     */
+
+    let text: string;
+
+    let heading: string;
+
+    let description: string;
+
+    let partyLabel: string;
+
+    let partyName: string;
+
+
+    /*
+     * PAYMENT SENDER
+     */
+
+    if (mail_role === "payment_sender") {
+
+        heading =
+            status === "completed"
+                ? "Payment sent"
+                : currentStatus.title;
+
+        description =
+            status === "completed"
+                ? `You sent ${currency} ${formattedAmount} to ${receiverName}.`
+                : currentStatus.message;
+
+        partyLabel = "Sent to";
+
+        partyName = receiverName;
+
+
+        text =
+            `${heading}\n\n` +
+            `${description}\n\n` +
+            `Transaction details\n` +
+            `Transaction ID: ${paymentId}\n` +
+            `Amount: ${currency} ${formattedAmount}\n` +
+            `Sent to: ${receiverName}\n` +
+            notesText +
+            `Date: ${formattedDate}\n` +
+            `Status: ${status}\n`;
+    }
+
+
+    /*
+     * PAYMENT RECEIVER
+     */
+
+    else if (mail_role === "payment_receiver") {
+
+        heading =
+            status === "completed"
+                ? "Payment received"
+                : currentStatus.title;
+
+        description =
+            status === "completed"
+                ? `You received ${currency} ${formattedAmount} from ${senderName}.`
+                : currentStatus.message;
+
+        partyLabel = "Received from";
+
+        partyName = senderName;
+
+
+        text =
+            `${heading}\n\n` +
+            `${description}\n\n` +
+            `Transaction details\n` +
+            `Transaction ID: ${paymentId}\n` +
+            `Amount: ${currency} ${formattedAmount}\n` +
+            `Received from: ${senderName}\n` +
+            notesText +
+            `Date: ${formattedDate}\n` +
+            `Status: ${status}\n`;
+    }
+
+
+    /*
+     * DEPOSIT
+     */
+
+    else {
+
+        heading =
+            status === "completed"
+                ? "Deposit successful"
+                : status === "pending"
+                    ? "Deposit pending"
+                    : currentStatus.title;
+
+        description =
+            status === "completed"
+                ? `${currency} ${formattedAmount} was added to your account.`
+                : currentStatus.message;
+
+        partyLabel = "Transaction";
+
+        partyName = "Deposit";
+
+
+        text =
+            `${heading}\n\n` +
+            `${description}\n\n` +
+            `Transaction details\n` +
+            `Transaction ID: ${paymentId}\n` +
+            `Amount: ${currency} ${formattedAmount}\n` +
+            notesText +
+            `Date: ${formattedDate}\n` +
+            `Status: ${status}\n`;
+    }
+
+
+    /*
+     * OPTIONAL NOTES ROW
+     *
+     * Only included when notes exist.
+     */
+
+    const notesHtml = formattedNotes
+        ? `
+<tr>
+    <td style="
+        padding: 12px 0;
+        font-size: 12px;
+        color: #6b7280;
+        border-bottom: 1px solid #e5e7eb;
+        vertical-align: top;
+    ">
+        Notes
+    </td>
+
+    <td align="right" style="
+        padding: 12px 0;
+        font-size: 12px;
+        font-weight: 600;
+        color: #111827;
+        border-bottom: 1px solid #e5e7eb;
+        word-break: break-word;
+        vertical-align: top;
+    ">
+        ${formattedNotes}
+    </td>
+</tr>
+`
+        : "";
+
+
+    /*
+     * HTML EMAIL
+     */
+
+    const html = `
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Payment Notification</title>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>${heading}</title>
+
 </head>
+
 
 <body style="
     margin: 0;
     padding: 0;
-    background-color: #f5f7fa;
+    background-color: #f6f7f9;
     font-family: Arial, Helvetica, sans-serif;
     color: #111827;
 ">
+
 
 <table
     width="100%"
@@ -87,437 +299,326 @@ export const prepareMail = ({
     cellspacing="0"
     border="0"
     style="
-        width: 100%;
-        background-color: #f5f7fa;
-        padding: 45px 16px;
+        background-color: #f6f7f9;
     "
 >
-<tr>
-<td align="center">
 
-    <!-- EMAIL CARD -->
+    <tr>
 
-    <table
-        width="560"
-        cellpadding="0"
-        cellspacing="0"
-        border="0"
-        style="
-            width: 100%;
-            max-width: 560px;
-            background-color: #ffffff;
-            border-radius: 16px;
-            overflow: hidden;
-        "
-    >
-
-        <!-- HEADER -->
-
-        <tr>
-            <td style="
-                padding: 24px 30px;
-                border-bottom: 1px solid #edf0f3;
-            ">
-
-                <table width="100%" cellpadding="0" cellspacing="0">
-                    <tr>
-
-                        <td>
-                            <div style="
-                                font-size: 20px;
-                                font-weight: 700;
-                                color: #111827;
-                                letter-spacing: -0.5px;
-                            ">
-                                PayFlow
-                            </div>
-
-                            <div style="
-                                margin-top: 4px;
-                                font-size: 11px;
-                                color: #9ca3af;
-                                letter-spacing: 0.5px;
-                            ">
-                                PAYMENT RECEIPT
-                            </div>
-                        </td>
-
-                        <td align="right">
-                            <div style="
-                                width: 34px;
-                                height: 34px;
-                                line-height: 34px;
-                                border-radius: 10px;
-                                background-color: #111827;
-                                color: #ffffff;
-                                text-align: center;
-                                font-size: 14px;
-                                font-weight: 700;
-                            ">
-                                P
-                            </div>
-                        </td>
-
-                    </tr>
-                </table>
-
-            </td>
-        </tr>
+        <td
+            align="center"
+            style="
+                padding: 32px 16px;
+            "
+        >
 
 
-        <!-- STATUS -->
+            <!-- EMAIL CARD -->
 
-        <tr>
-            <td align="center" style="
-                padding: 42px 30px 15px;
-            ">
-
-                <div style="
-                    width: 58px;
-                    height: 58px;
-                    line-height: 58px;
-                    border-radius: 50%;
-                    background-color: ${currentStatus.bg};
-                    color: ${currentStatus.color};
-                    font-size: 26px;
-                    font-weight: 700;
-                    text-align: center;
-                ">
-                    ${currentStatus.icon}
-                </div>
-
-                <div style="
-                    margin-top: 18px;
-                    font-size: 22px;
-                    font-weight: 700;
-                    letter-spacing: -0.5px;
-                    color: #111827;
-                ">
-                    ${currentStatus.title}
-                </div>
-
-                <div style="
-                    margin-top: 8px;
-                    font-size: 13px;
-                    line-height: 1.6;
-                    color: #6b7280;
-                ">
-                    ${currentStatus.message}
-                </div>
-
-            </td>
-        </tr>
+            <table
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+                style="
+                    max-width: 520px;
+                    background-color: #ffffff;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 10px;
+                "
+            >
 
 
-        <!-- AMOUNT -->
+                <!-- HEADER -->
 
-        <tr>
-            <td align="center" style="
-                padding: 20px 30px 32px;
-            ">
+                <tr>
 
-                <div style="
-                    font-size: 11px;
-                    text-transform: uppercase;
-                    letter-spacing: 1.5px;
-                    color: #9ca3af;
-                    font-weight: 700;
-                ">
-                    Amount
-                </div>
+                    <td style="
+                        padding: 24px 28px;
+                        border-bottom: 1px solid #e5e7eb;
+                    ">
 
-                <div style="
-                    margin-top: 7px;
-                    font-size: 38px;
-                    font-weight: 700;
-                    letter-spacing: -1.5px;
-                    color: #111827;
-                ">
-                    ${currency} ${formattedAmount}
-                </div>
-
-            </td>
-        </tr>
-
-
-        <!-- PAYMENT FLOW -->
-
-        <tr>
-            <td style="
-                padding: 0 30px 32px;
-            ">
-
-                <table
-                    width="100%"
-                    cellpadding="0"
-                    cellspacing="0"
-                    style="
-                        background-color: #f8fafc;
-                        border-radius: 12px;
-                    "
-                >
-
-                    <tr>
-
-                        <!-- SENDER -->
-
-                        <td width="42%" style="
-                            padding: 20px;
-                            vertical-align: top;
-                        ">
-
-                            <div style="
-                                font-size: 10px;
-                                color: #9ca3af;
-                                text-transform: uppercase;
-                                letter-spacing: 1px;
-                                font-weight: 700;
-                            ">
-                                From
-                            </div>
-
-                            <div style="
-                                margin-top: 7px;
-                                font-size: 14px;
-                                font-weight: 700;
-                                color: #111827;
-                            ">
-                                ${senderName}
-                            </div>
-
-                        </td>
-
-
-                        <!-- ARROW -->
-
-                        <td width="16%" align="center" style="
-                            vertical-align: middle;
-                            color: #9ca3af;
+                        <div style="
                             font-size: 18px;
-                        ">
-                            →
-                        </td>
-
-
-                        <!-- RECEIVER -->
-
-                        <td width="42%" style="
-                            padding: 20px;
-                            vertical-align: top;
-                            text-align: right;
-                        ">
-
-                            <div style="
-                                font-size: 10px;
-                                color: #9ca3af;
-                                text-transform: uppercase;
-                                letter-spacing: 1px;
-                                font-weight: 700;
-                            ">
-                                To
-                            </div>
-
-                            <div style="
-                                margin-top: 7px;
-                                font-size: 14px;
-                                font-weight: 700;
-                                color: #111827;
-                            ">
-                                ${receiverName}
-                            </div>
-
-                        </td>
-
-                    </tr>
-
-                </table>
-
-            </td>
-        </tr>
-
-
-        <!-- DETAILS -->
-
-        <tr>
-            <td style="
-                padding: 0 30px 35px;
-            ">
-
-                <div style="
-                    font-size: 14px;
-                    font-weight: 700;
-                    color: #111827;
-                    margin-bottom: 12px;
-                ">
-                    Transaction details
-                </div>
-
-                <table
-                    width="100%"
-                    cellpadding="0"
-                    cellspacing="0"
-                    style="
-                        border-top: 1px solid #edf0f3;
-                    "
-                >
-
-                    <tr>
-                        <td style="
-                            padding: 13px 0;
-                            font-size: 12px;
-                            color: #6b7280;
-                            border-bottom: 1px solid #edf0f3;
-                        ">
-                            Transaction ID
-                        </td>
-
-                        <td align="right" style="
-                            padding: 13px 0;
-                            font-size: 12px;
-                            color: #111827;
                             font-weight: 600;
-                            border-bottom: 1px solid #edf0f3;
-                        ">
-                            ${paymentId}
-                        </td>
-                    </tr>
-
-
-                    <tr>
-                        <td style="
-                            padding: 13px 0;
-                            font-size: 12px;
-                            color: #6b7280;
-                            border-bottom: 1px solid #edf0f3;
-                        ">
-                            Date
-                        </td>
-
-                        <td align="right" style="
-                            padding: 13px 0;
-                            font-size: 12px;
                             color: #111827;
-                            font-weight: 600;
-                            border-bottom: 1px solid #edf0f3;
                         ">
-                            ${formattedDate}
-                        </td>
-                    </tr>
+                            ${heading}
+                        </div>
+
+                    </td>
+
+                </tr>
 
 
-                    <tr>
-                        <td style="
-                            padding: 13px 0;
-                            font-size: 12px;
+                <!-- CONTENT -->
+
+                <tr>
+
+                    <td style="
+                        padding: 28px;
+                    ">
+
+
+                        <!-- DESCRIPTION -->
+
+                        <div style="
+                            font-size: 13px;
+                            line-height: 1.6;
                             color: #6b7280;
                         ">
-                            Status
-                        </td>
+                            ${description}
+                        </div>
 
-                        <td align="right" style="
-                            padding: 13px 0;
-                            font-size: 12px;
+
+                        <!-- AMOUNT -->
+
+                        <div style="
+                            margin-top: 18px;
+                            font-size: 30px;
+                            line-height: 1.2;
+                            font-weight: 600;
+                            color: #111827;
+                        ">
+                            ${currency} ${formattedAmount}
+                        </div>
+
+
+                        <!-- STATUS -->
+
+                        <div style="
+                            display: inline-block;
+                            margin-top: 14px;
+                            padding: 5px 9px;
+                            border-radius: 5px;
+                            background-color: ${currentStatus.bg};
                             color: ${currentStatus.color};
-                            font-weight: 700;
+                            font-size: 12px;
+                            font-weight: 600;
                             text-transform: capitalize;
                         ">
                             ${status}
-                        </td>
-                    </tr>
-
-                </table>
-
-            </td>
-        </tr>
+                        </div>
 
 
-        <!-- SECURITY MESSAGE -->
+                        <!-- TRANSACTION DETAILS -->
 
-        <tr>
-            <td style="
-                padding: 20px 30px;
-                background-color: #f8fafc;
-                border-top: 1px solid #edf0f3;
-            ">
+                        <table
+                            width="100%"
+                            cellpadding="0"
+                            cellspacing="0"
+                            border="0"
+                            style="
+                                margin-top: 28px;
+                                border-top: 1px solid #e5e7eb;
+                            "
+                        >
 
-                <div style="
-                    font-size: 11px;
-                    line-height: 1.7;
-                    color: #9ca3af;
-                ">
 
-                    <span style="
-                        color: #6b7280;
-                        font-weight: 700;
+                            <!-- PARTY -->
+
+                            <tr>
+
+                                <td style="
+                                    padding: 12px 0;
+                                    font-size: 12px;
+                                    color: #6b7280;
+                                    border-bottom: 1px solid #e5e7eb;
+                                ">
+                                    ${partyLabel}
+                                </td>
+
+
+                                <td
+                                    align="right"
+                                    style="
+                                        padding: 12px 0;
+                                        font-size: 13px;
+                                        font-weight: 600;
+                                        color: #111827;
+                                        border-bottom: 1px solid #e5e7eb;
+                                    "
+                                >
+                                    ${partyName}
+                                </td>
+
+                            </tr>
+
+
+                            <!-- TRANSACTION ID -->
+
+                            <tr>
+
+                                <td style="
+                                    padding: 12px 0;
+                                    font-size: 12px;
+                                    color: #6b7280;
+                                    border-bottom: 1px solid #e5e7eb;
+                                ">
+                                    Transaction ID
+                                </td>
+
+
+                                <td
+                                    align="right"
+                                    style="
+                                        padding: 12px 0;
+                                        font-size: 12px;
+                                        font-weight: 600;
+                                        color: #111827;
+                                        word-break: break-all;
+                                        border-bottom: 1px solid #e5e7eb;
+                                    "
+                                >
+                                    ${paymentId}
+                                </td>
+
+                            </tr>
+
+
+                            <!-- AMOUNT -->
+
+                            <tr>
+
+                                <td style="
+                                    padding: 12px 0;
+                                    font-size: 12px;
+                                    color: #6b7280;
+                                    border-bottom: 1px solid #e5e7eb;
+                                ">
+                                    Amount
+                                </td>
+
+
+                                <td
+                                    align="right"
+                                    style="
+                                        padding: 12px 0;
+                                        font-size: 12px;
+                                        font-weight: 600;
+                                        color: #111827;
+                                        border-bottom: 1px solid #e5e7eb;
+                                    "
+                                >
+                                    ${currency} ${formattedAmount}
+                                </td>
+
+                            </tr>
+
+
+                            <!-- NOTES -->
+
+                            ${notesHtml}
+
+
+                            <!-- DATE -->
+
+                            <tr>
+
+                                <td style="
+                                    padding: 12px 0;
+                                    font-size: 12px;
+                                    color: #6b7280;
+                                ">
+                                    Date
+                                </td>
+
+
+                                <td
+                                    align="right"
+                                    style="
+                                        padding: 12px 0;
+                                        font-size: 12px;
+                                        font-weight: 600;
+                                        color: #111827;
+                                    "
+                                >
+                                    ${formattedDate}
+                                </td>
+
+                            </tr>
+
+
+                            <!-- STATUS -->
+
+                            <tr>
+
+                                <td style="
+                                    padding: 12px 0;
+                                    font-size: 12px;
+                                    color: #6b7280;
+                                ">
+                                    Status
+                                </td>
+
+
+                                <td
+                                    align="right"
+                                    style="
+                                        padding: 12px 0;
+                                        font-size: 12px;
+                                        font-weight: 600;
+                                        color: ${currentStatus.color};
+                                        text-transform: capitalize;
+                                    "
+                                >
+                                    ${status}
+                                </td>
+
+                            </tr>
+
+                        </table>
+
+                    </td>
+
+                </tr>
+
+
+                <!-- SECURITY -->
+
+                <tr>
+
+                    <td style="
+                        padding: 16px 28px;
+                        background-color: #f9fafb;
+                        border-top: 1px solid #e5e7eb;
                     ">
-                        Security reminder
-                    </span>
 
-                    <br>
+                        <div style="
+                            font-size: 11px;
+                            line-height: 1.6;
+                            color: #6b7280;
+                        ">
+                            If you did not make or expect this transaction,
+                            please review your account immediately.
+                        </div>
 
-                    Never share your password, PIN, OTP, or payment
-                    credentials with anyone. PayFlow will never ask for
-                    these details by email.
+                    </td>
 
-                </div>
-
-            </td>
-        </tr>
-
-
-        <!-- FOOTER -->
-
-        <tr>
-            <td align="center" style="
-                padding: 25px 30px;
-                background-color: #111827;
-            ">
-
-                <div style="
-                    color: #ffffff;
-                    font-size: 13px;
-                    font-weight: 700;
-                ">
-                    PayFlow
-                </div>
-
-                <div style="
-                    margin-top: 6px;
-                    color: #6b7280;
-                    font-size: 10px;
-                ">
-                    Secure payment infrastructure
-                </div>
-
-                <div style="
-                    margin-top: 12px;
-                    color: #4b5563;
-                    font-size: 9px;
-                ">
-                    This is an automated email. Please do not reply.
-                </div>
-
-            </td>
-        </tr>
-
-    </table>
+                </tr>
 
 
-    <!-- OUTSIDE FOOTER -->
+            </table>
 
-    <div style="
-        margin-top: 18px;
-        color: #a1a8b3;
-        font-size: 10px;
-    ">
-        © ${new Date().getFullYear()} PayFlow
-    </div>
+        </td>
 
-</td>
-</tr>
+    </tr>
+
 </table>
 
+
 </body>
+
 </html>
-    `;
+`;
+
+
+    /*
+     * RETURN BOTH VERSIONS
+     */
+
+    return {
+        text,
+        html,
+    };
 };

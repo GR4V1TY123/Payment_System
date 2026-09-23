@@ -6,24 +6,12 @@ import { paymentsDeadLettered, paymentsFailed, paymentsInProgress, paymentsRetri
 import { buildFastify } from '../../app';
 import client from 'prom-client';
 import { pool } from '../db';
-import { getPaymentByIdQuery } from '../../query/paymentQueries';
+import { getPaymentByIdQuery, getPaymentDetailsWithNamesQuery } from '../../query/paymentQueries';
 import { redisPublish } from '../../utils/redis/redisPublisher';
+import connection from '../rabbitmq';
+import { sendToMailQueue } from '../mail/sendToQueue';
 
 const MAX_RETRIES = 3;
-
-let connection;
-try {
-    connection = await amqp.connect(process.env.RABBITMQ_URL ?? 'amqp://localhost:5672');
-    workerLogger.info({
-        message: 'Connected to RabbitMQ successfully'
-    });
-} catch (error) {
-    workerLogger.error({
-        message: 'Failed to connect to RabbitMQ',
-        error: (error as Error).message
-    });
-    process.exit(1);
-}
 
 const workerServer = buildFastify();
 const register = client.register;
@@ -90,7 +78,7 @@ channel.consume(queue, async (msg) => {
 
         try {
             
-            const payment = (await pool.query(getPaymentByIdQuery(BigInt(paymentId)))).rows[0];
+            const payment = (await pool.query(getPaymentDetailsWithNamesQuery(BigInt(paymentId)))).rows[0];
             if (!payment) {
                 throw new Error(`Payment not found for payment ID: ${paymentId}`);
             }
@@ -134,16 +122,12 @@ channel.consume(queue, async (msg) => {
                 message: `Successfully processed payment with paymentId: ${paymentId}`,
             });
 
-            channel.ack(msg);
-
-            paymentsSuccessful.inc({ payment_type: paymentData.payment_type });
-
             if (paymentType === 'TRANSFER') {
                 // notify sender and receiver about the payment status
                 const senderId = payment.sender_id.toString();
                 const receiverId = payment.receiver_id.toString();
 
-                const channel = "payment.updated"
+                const sseChannel = "payment.updated"
 
                 const message = {
                     payment_id: paymentId,
@@ -153,22 +137,32 @@ channel.consume(queue, async (msg) => {
                     payment_type: paymentType
                 }
 
-                await redisPublish(channel, {
+                await redisPublish(sseChannel, {
                     ...message,
                     account_id: senderId
                 });
 
-                await redisPublish(channel, {
+                await redisPublish(sseChannel, {
                     ...message,
                     account_id: receiverId
                 });
 
-                // send notification to sender and receiver about the payment status
+                // send msg to mail queue for sending mail to sender and receiver
+                const mailDataSender = {
+                    payment_id: paymentId,
+                    recipient_email: payment.sender_email,
+                }
+                await sendToMailQueue(channel, mailDataSender);
+                const mailDataReceiver = {
+                    payment_id: paymentId,
+                    recipient_email: payment.receiver_email,
+                }
+                await sendToMailQueue(channel, mailDataReceiver);
 
             } else if (paymentType === 'DEPOSIT') {
                 // notify sender about the payment status
                 const senderId = payment.receiver_id.toString(); // for deposit, the receiver is the account that made the deposit
-                const channel = "payment.updated"
+                const sseChannel = "payment.updated"
 
                 const message = {
                     payment_id: paymentId,
@@ -179,14 +173,23 @@ channel.consume(queue, async (msg) => {
                     payment_type: paymentType
                 }
 
-                await redisPublish(channel, {
+                await redisPublish(sseChannel, {
                     ...message,
                     account_id: senderId
                 });
 
-                // send notification to sender about the payment status
+                // send msg to mail queue for sending mail to sender
+                const mailData = {
+                    payment_id: paymentId,
+                    recipient_email: payment.receiver_email,
+                }
+                await sendToMailQueue(channel, mailData);
             }
 
+            
+            channel.ack(msg);
+
+            paymentsSuccessful.inc({ payment_type: paymentData.payment_type });
 
         } catch (error) {
 

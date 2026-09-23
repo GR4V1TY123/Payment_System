@@ -11,5 +11,5 @@ async function mailerPlugin(fastify: any, options: any) {
 
 export default fp(mailerPlugin, {
   name: 'mailer-plugin',
-  fastify: '4.x'
+  fastify: '5.x'
 });

@@ -1,9 +1,14 @@
 // Queue operations for payment processing
-import { getRabbitChannel } from "../rabbitmq";
+import { ConfirmChannel } from "amqplib";
+import connection from "../rabbitmq";
+
+const channel: ConfirmChannel = await connection.createConfirmChannel();
+
+await channel.assertQueue("payment_queue", {
+    durable: true
+});
 
 export const publishToQueue = async (paymentData: any) => {
-    const channel = getRabbitChannel();
-
     channel.sendToQueue(
         'payment_queue',
         Buffer.from(JSON.stringify(paymentData)),

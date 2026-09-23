@@ -24,6 +24,26 @@ export const handleMail = async (payment_id: bigint, recipent_email: string) => 
 
         const payment = paymentResult.rows[0];
 
+        let subject;
+
+        let mail_role: "payment_sender" | "payment_receiver" | "payment_depositor"; // default role
+        mail_role = 'payment_depositor'; // default role
+        if (payment.payment_type === 'TRANSFER') {
+            if (payment.sender_email === recipent_email) {
+                mail_role = 'payment_sender';
+            } else if (payment.receiver_email === recipent_email) {
+                mail_role = 'payment_receiver';
+            }
+        }
+
+        if (mail_role === 'payment_sender') {
+            subject = `You have sent a payment of ${payment.amount} ${payment.currency} to ${payment.receiver_name}`;
+        } else if (mail_role === 'payment_receiver') {
+            subject = `You have received a payment of ${payment.amount} ${payment.currency} from ${payment.sender_name}`;
+        } else if (mail_role === 'payment_depositor') {
+            subject = `You have deposited ${payment.amount} ${payment.currency} to your account`;
+        }
+
         const mailBodyPayload = {
             paymentId: payment.payment_id,
             amount: payment.amount,
@@ -32,32 +52,27 @@ export const handleMail = async (payment_id: bigint, recipent_email: string) => 
             receiverName: payment.receiver_name,
             status: payment.status,
             createdAt: payment.created_at,
+            notes: payment.notes,
         };
 
-        const body = prepareMail(mailBodyPayload);
-        
-        let subject;
-        if(payment.payment_type === 'TRANSFER') {
-            subject = `Payment Successful: Your payment to ${payment.receiver_name} with ID ${payment.payment_id} has been processed`;
-        } else if(payment.payment_type === 'DEPOSIT') {
-            subject = `Deposit Successful: Your deposit with ID ${payment.payment_id} has been processed`;
-        }
+        const body = prepareMail(mail_role, mailBodyPayload);
 
         // send mail via nodemailer
         const mailOptions = {
             from: process.env.SMTP_FROM_EMAIL,
             to: recipent_email,
             subject: subject,
-            html: body
+            text: body.text, // fallback text version of the email
+            html: body.html
         };
 
         const info = await mailServer.mailer.sendMail(mailOptions);
-        
+
         mailLogger.info({
             message: 'Mail sent successfully',
             payment_id,
             recipent_email,
-            info: info
+            messageId: info.messageId
         });
         return {
             success: true,

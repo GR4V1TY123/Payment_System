@@ -1,8 +1,6 @@
-import { getRabbitChannel } from "../rabbitmq";
+import { ConfirmChannel } from "amqplib";
 
-export const sendToMailQueue = async (mailData: any) => {
-    const channel = getRabbitChannel();
-
+export const sendToMailQueue = async (channel: ConfirmChannel,mailData: any) => {
     channel.sendToQueue(
         'mail_queue',
         Buffer.from(JSON.stringify(mailData)),

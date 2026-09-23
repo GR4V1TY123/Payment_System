@@ -22,7 +22,7 @@ await apiServer.register(cors, {
 });
 
 await apiServer.register(jwt, {
-  secret: process.env.JWT_SECRET_KEY || 'mandar_secret_key',
+  secret: String(process.env.JWT_SECRET_KEY),
   cookie: {
     cookieName: 'access_token',
     signed: false,

@@ -3,33 +3,21 @@ import client from 'prom-client';
 import { mailLogger } from "../../utils/logger";
 import amqp from 'amqplib';
 import { handleMail } from "./handleMail";
+import connection from "../rabbitmq";
+import nodemailerPlugin from '../../plugins/nodemailer'
 
 const MAX_RETRIES = 3;
 
-let connection;
-try {
-    connection = await amqp.connect(process.env.RABBITMQ_URL ?? 'amqp://localhost:5672');
-    mailLogger.info({
-        message: 'Connected to RabbitMQ successfully'
-    });
-} catch (error) {
-    mailLogger.error({
-        message: 'Failed to connect to RabbitMQ',
-        error: (error as Error).message
-    });
-    process.exit(1);
-}
-
-
 const mailServer = buildFastify();
 const register = client.register;
-mailServer.register(require('../../plugins/nodemailer'), {
+
+mailServer.register(nodemailerPlugin, {
     transport: {
         host: process.env.SMTP_HOST ?? 'smtp.example.com',
         port: Number(process.env.SMTP_PORT ?? 587),
         secure: false, // true for 465, false for other ports
         auth: {
-            user: process.env.SMTP_USER,
+            user: process.env.SMTP_FROM_EMAIL,
             pass: process.env.SMTP_PASS
         }
     }

@@ -2,7 +2,6 @@
 import { buildFastify } from '../../app';
 import { publisherLogger } from '../../utils/logger';
 import { fetchAndPublishPayments } from './publisher';
-import { connectRabbitMQ } from '../rabbitmq';
 import client from 'prom-client';
 
 const publisherServer = buildFastify();
@@ -22,8 +21,6 @@ publisherServer.get('/metrics', async (request, reply) => {
 
 const start = async () => {
     try {
-        await connectRabbitMQ("payment_queue");
-
         const port = Number(process.env.PUBLISHER_PORT ?? 4000);
         await publisherServer.listen({ 
             port, 
