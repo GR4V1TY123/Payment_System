@@ -1,10 +1,10 @@
 import { buildFastify } from "../../app";
 import client from 'prom-client';
 import { mailLogger } from "../../utils/logger";
-import amqp from 'amqplib';
 import { handleMail } from "./handleMail";
 import connection from "../rabbitmq";
 import nodemailerPlugin from '../../plugins/nodemailer'
+import { mailsDeadLettered, mailsFailed, mailsInProgress, mailsRetried, mailsSent, messagesInProgress, messagesProcessed } from "../../utils/metrics";
 
 const MAX_RETRIES = 3;
 
@@ -75,18 +75,27 @@ channel.consume(queue, async (msg) => {
         return;
     }
 
-    mailLogger.info({
-        message: 'Received message from queue',
-        content: msg.content.toString(),
-    });
-
     const attemptCount = Number(msg.properties.headers?.['x-attempts'] ?? 0);
 
     const mailData = JSON.parse(msg.content.toString());
     const { payment_id, recipient_email } = mailData;
 
+    mailLogger.info({
+        message: 'Received message from queue',
+        payment_id,
+        recipient_email,
+        attemptCount
+    });
+
+    mailsInProgress.inc(); // Increment in-progress counter
+    messagesInProgress.inc({ queue_name: queue, event_type: 'MAIL' });
+
+    let mailRole: string = 'unknown'; // Default to 'unknown' if mailRole is not provided
+
     try {
         const result = await handleMail(payment_id, recipient_email);
+
+        mailRole = result.mailRole ?? 'unknown'; // Default to 'unknown' if mailRole is not provided
 
         if (!result.success) {
             if (!result.retryable) {
@@ -98,6 +107,7 @@ channel.consume(queue, async (msg) => {
                     error: result.error
                 });
                 channel.ack(msg);
+                mailsFailed.inc({ mail_role: mailRole }, 1); // Increment failed counter
                 return;
             }
             throw new Error(result.error);
@@ -110,6 +120,8 @@ channel.consume(queue, async (msg) => {
         });
 
         channel.ack(msg);
+
+        mailsSent.inc({ mail_role: mailRole }, 1); // Increment sent counter
 
     } catch (error) {
         if (attemptCount < MAX_RETRIES) {
@@ -153,6 +165,8 @@ channel.consume(queue, async (msg) => {
             );
             await channel.waitForConfirms();
             channel.ack(msg);
+
+            mailsRetried.inc({ mail_role: mailRole }, 1); // Increment retried counter
         } else {
             mailLogger.error({
                 message: `Max retries reached for mail for payment id: ${payment_id}. Sending to deadletter queue.`,
@@ -169,8 +183,14 @@ channel.consume(queue, async (msg) => {
 
             await channel.waitForConfirms();
             channel.ack(msg);
+
+            mailsFailed.inc({ mail_role: mailRole }, 1); // Increment failed counter
+            mailsDeadLettered.inc({ mail_role: mailRole }, 1); // Increment deadlettered counter
         }
     } finally {
+        mailsInProgress.dec();
+        messagesInProgress.dec({ queue_name: queue, event_type: 'MAIL' });
+        messagesProcessed.inc({ queue_name: queue, event_type: 'MAIL' });
     }
 })
 

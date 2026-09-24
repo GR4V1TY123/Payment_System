@@ -2,7 +2,7 @@
 import amqp from 'amqplib';
 import { handlePayment } from './handlePayments';
 import { workerLogger } from '../../utils/logger';
-import { paymentsDeadLettered, paymentsFailed, paymentsInProgress, paymentsRetried, paymentsSuccessful } from '../../utils/metrics';
+import { messagesInProgress, messagesProcessed, paymentsDeadLettered, paymentsFailed, paymentsInProgress, paymentsRetried, paymentsSuccessful } from '../../utils/metrics';
 import { buildFastify } from '../../app';
 import client from 'prom-client';
 import { pool } from '../db';
@@ -73,6 +73,7 @@ channel.consume(queue, async (msg) => {
         const paymentType = paymentData.payment_type;
 
         paymentsInProgress.inc({ payment_type: paymentType });
+        messagesInProgress.inc({ queue_name: queue, event_type: paymentType });
 
         const attemptCount = Number(msg.properties.headers?.['x-attempts'] ?? 0);
 
@@ -256,6 +257,8 @@ channel.consume(queue, async (msg) => {
             }
         } finally {
             paymentsInProgress.dec({ payment_type: paymentType });
+            messagesInProgress.dec({ queue_name: queue, event_type: paymentType });
+            messagesProcessed.inc({ queue_name: queue, event_type: paymentType });
         }
     }
 }, { noAck: false });

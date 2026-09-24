@@ -7,6 +7,7 @@ import { createOutboxEntryQuery } from "../query/outboxQueries";
 import { apiLogger } from "../utils/logger";
 import * as argon2 from "argon2";
 import { addClient } from "../utils/sse";
+import { accountsActive, accountsCreated, paymentsCreated } from "../utils/metrics";
 
 const createAccount = async (
     request: FastifyRequest<{
@@ -45,6 +46,9 @@ const createAccount = async (
             message: `Successfully created account for ${name} with email ${email}`,
             rowCount: result.rowCount,
         });
+
+        accountsCreated.inc({ account_status: 'active' });
+        accountsActive.inc({ account_status: 'active' });
 
         reply.setCookie('access_token', token, {
             httpOnly: true,
@@ -292,6 +296,8 @@ const depositPayment = async (
         await client.query(OutboxEntryQuery);
 
         await client.query("COMMIT");
+
+        paymentsCreated.inc({ payment_type });
 
         // Send payment data to RabbitMQ for further processing
         apiLogger.info({

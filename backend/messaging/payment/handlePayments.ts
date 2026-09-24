@@ -129,14 +129,12 @@ export const transferAmount = async (paymentId: bigint) => {
 
         await client.query("COMMIT");
 
-        const duration = (Date.now() - startTime) / 1000; // duration in seconds
-        paymentsDuration.observe({ payment_type: 'TRANSFER' }, duration);
         paymentsAmount.observe({ payment_type: 'TRANSFER' }, Number(payment.amount));
 
         databaseLogger.info({
             message: `Successfully processed payment with ID: ${paymentId}`,
             payment_id: paymentId,
-            duration: duration
+            duration: (Date.now() - startTime) / 1000
         });
 
         return {
@@ -148,12 +146,10 @@ export const transferAmount = async (paymentId: bigint) => {
 
     } catch (error) {
         await client.query("ROLLBACK");
-        const duration = (Date.now() - startTime) / 1000; // duration in seconds
-        paymentsDuration.observe({ payment_type: 'TRANSFER' }, duration);
         databaseLogger.error({
             message: `Error processing payment with ID: ${paymentId}`,
             error: (error as Error).message,
-            duration: duration
+            duration: (Date.now() - startTime) / 1000
         });
 
         return {
@@ -163,7 +159,7 @@ export const transferAmount = async (paymentId: bigint) => {
             error: (error as Error).message
         }
     } finally {
-        // Release the client back to the pool
+        paymentsDuration.observe({ payment_type: 'TRANSFER' }, (Date.now() - startTime) / 1000);
         client.release();
     }
 }
@@ -232,14 +228,12 @@ export const depositPayment = async (paymentId: bigint) => {
 
         await client.query("COMMIT");
 
-        const duration = (Date.now() - startTime) / 1000; // duration in seconds
-        paymentsDuration.observe({ payment_type: 'DEPOSIT' }, duration);
         paymentsAmount.observe({ payment_type: 'DEPOSIT' }, Number(payment.amount));
 
         databaseLogger.info({
             message: `Successfully processed deposit for payment ID: ${paymentId}`,
             payment_id: paymentId,
-            duration: duration
+            duration: (Date.now() - startTime) / 1000
         });
 
         return {
@@ -249,12 +243,10 @@ export const depositPayment = async (paymentId: bigint) => {
         };
     } catch (error) {
         await client.query("ROLLBACK");
-        const duration = (Date.now() - startTime) / 1000; // duration in seconds
-        paymentsDuration.observe({ payment_type: 'DEPOSIT' }, duration);
         databaseLogger.error({
             message: `Error processing deposit with ID: ${paymentId}`,
             error: (error as Error).message,
-            duration: duration
+            duration: (Date.now() - startTime) / 1000
         });
         return {
             success: false,
@@ -263,7 +255,7 @@ export const depositPayment = async (paymentId: bigint) => {
             error: (error as Error).message
         }
     } finally {
-        // Release the client back to the pool
+        paymentsDuration.observe({ payment_type: 'DEPOSIT' }, (Date.now() - startTime) / 1000);
         client.release();
     }
 }

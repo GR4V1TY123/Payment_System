@@ -102,6 +102,43 @@ const messagesInProgress = new client.Gauge({
     labelNames: ['queue_name', 'event_type'],
 });
 
+// mail
+const mailsSent = new client.Counter({
+    name: 'mails_sent_total',
+    help: 'Total number of mails sent',
+    labelNames: ['mail_role'],
+});
+
+const mailsFailed = new client.Counter({
+    name: 'mails_failed_total',
+    help: 'Total number of mails failed to send',
+    labelNames: ['mail_role'],
+});
+
+const mailsRetried = new client.Counter({
+    name: 'mails_retried_total',
+    help: 'Total number of mails retried to send',
+    labelNames: ['mail_role'],
+});
+
+const mailsInProgress = new client.Gauge({
+    name: 'mails_in_progress',
+    help: 'Number of mails currently being processed',
+});
+
+const mailsDeadLettered = new client.Counter({
+    name: 'mails_dead_lettered_total',
+    help: 'Total number of mails sent to dead letter queue',
+    labelNames: ['mail_role'],
+});
+
+const mailsDuration = new client.Histogram({
+    name: 'mails_duration_seconds',
+    help: 'Duration of mail processing in seconds',
+    labelNames: ['mail_role', 'mail_status'],
+    buckets: [0.1, 0.5, 1, 2, 5, 10],
+});
+
 
 export {
     paymentsCreated,
@@ -122,5 +159,12 @@ export {
     outboxRetried,
 
     messagesProcessed,
-    messagesInProgress
+    messagesInProgress,
+
+    mailsSent,
+    mailsFailed,
+    mailsRetried,
+    mailsInProgress,
+    mailsDeadLettered,
+    mailsDuration,
 };

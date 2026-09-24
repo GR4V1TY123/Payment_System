@@ -3,7 +3,7 @@ import { pool } from "../db";
 import { publishToQueue } from "./sendToQueue";
 import { getUnpublishedOutboxEntriesQuery, incrementAttemptCountQuery, updateOutboxEntryAsPublishedQuery } from "../../query/outboxQueries";
 import { publisherLogger } from "../../utils/logger";
-import { outboxFailed, outboxPublished } from "../../utils/metrics";
+import { outboxFailed, outboxPublished, outboxRetried } from "../../utils/metrics";
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -51,6 +51,7 @@ export const fetchAndPublishPayments = async () => {
                     await pool.query(incrementQuery);
 
                     outboxFailed.inc({ event_type: event.event_type });
+                    outboxRetried.inc({ event_type: event.event_type });
 
                     publisherLogger.error({
                         message: `Error publishing payment with event_id: ${event.event_id} to RabbitMQ. Incremented attempt count.`,

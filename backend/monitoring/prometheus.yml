@@ -6,10 +6,14 @@ scrape_configs:
     static_configs:
       - targets: ["host.docker.internal:3000"]
 
-  - job_name: "worker"
+  - job_name: "payment_worker"
     static_configs:
       - targets: ["host.docker.internal:5000"]
 
   - job_name: "publisher"
     static_configs:
       - targets: ["host.docker.internal:4000"]
+
+  - job_name: "mail_worker"
+    static_configs:
+      - targets: ["host.docker.internal:6000"]

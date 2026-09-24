@@ -1,10 +1,15 @@
 import { getPaymentDetailsWithNamesQuery } from "../../query/paymentQueries";
 import { mailLogger } from "../../utils/logger";
+import { mailsDuration } from "../../utils/metrics";
 import { prepareMail } from "../../utils/prepareMail";
 import { pool } from "../db";
 import { mailServer } from "./worker";
 
 export const handleMail = async (payment_id: bigint, recipent_email: string) => {
+    const startTime = Date.now();
+    let mailStatus: "success" | "failed" = "failed"; // default status
+
+    let mail_role: "payment_sender" | "payment_receiver" | "payment_depositor" | "unknown" = "unknown";
     try {
         // get payment details from database
         const paymentQuery = getPaymentDetailsWithNamesQuery(payment_id);
@@ -26,8 +31,7 @@ export const handleMail = async (payment_id: bigint, recipent_email: string) => 
 
         let subject;
 
-        let mail_role: "payment_sender" | "payment_receiver" | "payment_depositor"; // default role
-        mail_role = 'payment_depositor'; // default role
+        mail_role = 'payment_depositor';
         if (payment.payment_type === 'TRANSFER') {
             if (payment.sender_email === recipent_email) {
                 mail_role = 'payment_sender';
@@ -74,9 +78,14 @@ export const handleMail = async (payment_id: bigint, recipent_email: string) => 
             recipent_email,
             messageId: info.messageId
         });
+
+        mailStatus = "success"; // update status to success
+
         return {
             success: true,
-            retryable: false
+            retryable: false,
+            mailRole: mail_role,
+            messageId: info.messageId
         };
 
     } catch (error) {
@@ -86,10 +95,24 @@ export const handleMail = async (payment_id: bigint, recipent_email: string) => 
             recipent_email,
             error: error instanceof Error ? error.message : String(error)
         });
+
+        mailStatus = "failed"; // update status to retry
+
         return {
             success: false,
             retryable: true,
-            error: error instanceof Error ? error.message : String(error)
+            error: error instanceof Error ? error.message : String(error),
         };
+    } finally {
+        const endTime = Date.now();
+        const duration = endTime - startTime;
+        mailLogger.info({
+            message: 'Mail processing duration',
+            payment_id,
+            recipent_email,
+            duration_ms: duration
+        });
+
+        mailsDuration.observe({ mail_role, mail_status: mailStatus }, duration / 1000);
     }
 }

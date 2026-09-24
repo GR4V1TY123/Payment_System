@@ -4,7 +4,7 @@ import { createPaymentQuery, getPaymentDetailsQuery } from "../query/paymentQuer
 import { pool } from "../messaging/db";
 import { createOutboxEntryQuery } from "../query/outboxQueries";
 import { apiLogger } from "../utils/logger";
-import { paymentsCreated, paymentsFailed } from "../utils/metrics";
+import { paymentsCreated } from "../utils/metrics";
 
 const createPayment = async (
     request: FastifyRequest<{
@@ -75,7 +75,6 @@ const createPayment = async (
             error: (error as Error).message
         });
 
-        paymentsFailed.inc({ payment_type: payment_type });
         reply.status(500).send({
             success: false,
             message: 'Error creating payment',
