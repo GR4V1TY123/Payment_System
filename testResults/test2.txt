@@ -1,0 +1,23 @@
+TEST 2 — RETRY + DLQ
+
+Payment ID: 9191
+
+Attempt 1: retry_queue_1
+Delay: 2941 ms
+
+Attempt 2: retry_queue_2
+Delay: 4981 ms
+
+Attempt 3: retry_queue_3
+Delay: 8099 ms
+
+Attempt 4: payment_dlq
+
+Retries: +3
+DLQ: +1
+Failed: +1
+
+Payment financially processed: NO
+Duplicate ledger entries: NO
+
+Result: PASS

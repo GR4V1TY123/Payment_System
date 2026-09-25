@@ -1,0 +1,66 @@
+C:\Users\manda\Desktop\Payment System [main ≡ +1 ~3 -0 !]> k6 run load-test.js
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: load-test.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 25 max VUs, 2m0s max duration (incl. graceful stop):
+              * default: Up to 25 looping VUs for 1m30s over 4 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+
+
+
+  █ THRESHOLDS 
+
+    http_req_duration
+    ✓ 'p(95)<1000' p(95)=9.91ms
+
+    http_req_failed
+    ✓ 'rate<0.05' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 8981    99.748496/s
+    checks_succeeded...: 100.00% 8981 out of 8981
+    checks_failed......: 0.00%   0 out of 8981
+
+    ✓ payment request accepted
+
+    HTTP
+    http_req_duration..............: avg=5.72ms   min=531.69µs med=4.97ms   max=132.03ms p(90)=8.42ms   p(95)=9.91ms  
+      { expected_response:true }...: avg=5.72ms   min=531.69µs med=4.97ms   max=132.03ms p(90)=8.42ms   p(95)=9.91ms  
+    http_req_failed................: 0.00%  0 out of 8981
+    http_reqs......................: 8981   99.748496/s
+
+    EXECUTION
+    iteration_duration.............: avg=106.18ms min=100.98ms med=105.39ms max=232.36ms p(90)=108.98ms p(95)=110.57ms
+    iterations.....................: 8981   99.748496/s
+    vus............................: 1      min=1         max=24
+    vus_max........................: 25     min=25        max=25
+
+    NETWORK
+    data_received..................: 3.9 MB 44 kB/s
+    data_sent......................: 4.4 MB 49 kB/s
+
+
+
+
+running (1m30.0s), 00/25 VUs, 8981 complete and 0 interrupted iterations
+
+
+
+prometheus metrics:
+
+Total payments created: 8981
+Failed payments: 0
+successful payments: 8981
+total payment amount: 89810.00
+avg payment duration: 3.26ms
+payments retried: 0

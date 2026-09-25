@@ -69,7 +69,7 @@ channel.consume(queue, async (msg) => {
         });
 
         const paymentData = JSON.parse(msg.content.toString());
-        const paymentId = paymentData.payment_id;
+        const paymentId = BigInt(paymentData.payment_id);
         const paymentType = paymentData.payment_type;
 
         paymentsInProgress.inc({ payment_type: paymentType });
@@ -85,7 +85,7 @@ channel.consume(queue, async (msg) => {
             }
 
             await redisPublish("payment.updated", {
-                payment_id: paymentId,
+                payment_id: paymentId.toString(),
                 status: 'processing',
                 amount: payment?.amount,
                 currency: payment?.currency,
@@ -106,7 +106,7 @@ channel.consume(queue, async (msg) => {
                     });
                     paymentsFailed.inc({ payment_type: paymentData.payment_type });
                     await redisPublish("payment.updated", {
-                        payment_id: paymentId,
+                        payment_id: paymentId.toString(),
                         status: 'failed',
                         error: result.message,
                         amount: payment?.amount,
@@ -131,7 +131,7 @@ channel.consume(queue, async (msg) => {
                 const sseChannel = "payment.updated"
 
                 const message = {
-                    payment_id: paymentId,
+                    payment_id: paymentId.toString(),
                     status: 'completed',
                     amount: payment.amount,
                     currency: payment.currency,
@@ -150,15 +150,15 @@ channel.consume(queue, async (msg) => {
 
                 // send msg to mail queue for sending mail to sender and receiver
                 const mailDataSender = {
-                    payment_id: paymentId,
+                    payment_id: paymentId.toString(),
                     recipient_email: payment.sender_email,
                 }
-                await sendToMailQueue(channel, mailDataSender);
+                // await sendToMailQueue(channel, mailDataSender);
                 const mailDataReceiver = {
-                    payment_id: paymentId,
+                    payment_id: paymentId.toString(),
                     recipient_email: payment.receiver_email,
                 }
-                await sendToMailQueue(channel, mailDataReceiver);
+                // await sendToMailQueue(channel, mailDataReceiver);
 
             } else if (paymentType === 'DEPOSIT') {
                 // notify sender about the payment status
@@ -166,7 +166,7 @@ channel.consume(queue, async (msg) => {
                 const sseChannel = "payment.updated"
 
                 const message = {
-                    payment_id: paymentId,
+                    payment_id: paymentId.toString(),
                     status: 'completed',
                     amount: payment.amount,
                     currency: payment.currency,
@@ -181,10 +181,10 @@ channel.consume(queue, async (msg) => {
 
                 // send msg to mail queue for sending mail to sender
                 const mailData = {
-                    payment_id: paymentId,
+                    payment_id: paymentId.toString(),
                     recipient_email: payment.receiver_email,
                 }
-                await sendToMailQueue(channel, mailData);
+                // await sendToMailQueue(channel, mailData);
             }
 
             
