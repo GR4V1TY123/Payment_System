@@ -153,12 +153,12 @@ channel.consume(queue, async (msg) => {
                     payment_id: paymentId.toString(),
                     recipient_email: payment.sender_email,
                 }
-                // await sendToMailQueue(channel, mailDataSender);
+                await sendToMailQueue(channel, mailDataSender);
                 const mailDataReceiver = {
                     payment_id: paymentId.toString(),
                     recipient_email: payment.receiver_email,
                 }
-                // await sendToMailQueue(channel, mailDataReceiver);
+                await sendToMailQueue(channel, mailDataReceiver);
 
             } else if (paymentType === 'DEPOSIT') {
                 // notify sender about the payment status
@@ -184,7 +184,7 @@ channel.consume(queue, async (msg) => {
                     payment_id: paymentId.toString(),
                     recipient_email: payment.receiver_email,
                 }
-                // await sendToMailQueue(channel, mailData);
+                await sendToMailQueue(channel, mailData);
             }
 
             

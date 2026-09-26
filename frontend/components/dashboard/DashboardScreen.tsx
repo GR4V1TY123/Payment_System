@@ -190,8 +190,6 @@ export function DashboardScreen() {
         <main className="shell">
             <header className="topbar">
                 <div className="wordmark">
-                    <span className="brand-mark">P</span>
-                    <span>PocketPay</span>
                 </div>
                 <div className="profile">
                     <span className="avatar">{account.name.charAt(0).toUpperCase()}</span>
@@ -227,7 +225,7 @@ export function DashboardScreen() {
                 </div>
                 <div className="action-card">
                     <h2>Make a payment</h2>
-                    <p className="muted">Send money to another PocketPay account.</p>
+                    <p className="muted">Send money to another account.</p>
                     <form onSubmit={(event) => handlePayment(event, "send")}>
                         <label>
                             Recipient account ID

@@ -39,8 +39,6 @@ export function AuthScreen({ mode }: { mode: "login" | "register" }) {
         <main className="auth-shell">
             <div className="auth-intro">
                 <div className="wordmark">
-                    <span className="brand-mark">P</span>
-                    <span>PocketPay</span>
                 </div>
                 <div className="intro-copy">
                     <p className="eyebrow">MONEY, MADE CLEAR</p>
@@ -63,7 +61,7 @@ export function AuthScreen({ mode }: { mode: "login" | "register" }) {
                 <h2>{mode === "login" ? "Welcome back" : "Open your wallet"}</h2>
                 <p className="muted">
                     {mode === "login"
-                        ? "Sign in to continue to PocketPay."
+                        ? "Sign in to continue."
                         : "It takes less than a minute to get started."}
                 </p>
                 <form className="auth-form" onSubmit={submit}>
